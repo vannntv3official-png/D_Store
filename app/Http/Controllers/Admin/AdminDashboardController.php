@@ -89,6 +89,30 @@ class AdminDashboardController extends Controller
             $chartData[] = isset($dailySales[$dateStr]) ? (float) $dailySales[$dateStr]->daily_total : 0.0;
         }
 
+        // Period analytical summary
+        $periodTotalRevenue = array_sum($chartData);
+        $avgDailyRevenue = $days > 0 ? $periodTotalRevenue / $days : 0;
+        $maxChartVal = !empty($chartData) ? max($chartData) : 0;
+        $maxKey = !empty($chartData) ? array_search($maxChartVal, $chartData) : false;
+        $peakDayLabel = ($maxKey !== false && isset($chartLabels[$maxKey])) ? $chartLabels[$maxKey] : 'N/A';
+
+        // Calculate comparison with preceding period of identical duration
+        $priorStartDate = $startDate->copy()->subDays($days);
+        $priorEndDate = $startDate->copy();
+        $priorTotalRevenue = (float) Order::where('created_at', '>=', $priorStartDate)
+            ->where('created_at', '<', $priorEndDate)
+            ->whereNotIn('fulfillment_status', [Order::FULFILLMENT_CANCELLED])
+            ->sum('grand_total');
+
+        $trendPercentage = 0.0;
+        if ($priorTotalRevenue > 0) {
+            $trendPercentage = round((($periodTotalRevenue - $priorTotalRevenue) / $priorTotalRevenue) * 100, 1);
+        } elseif ($periodTotalRevenue > 0) {
+            $trendPercentage = 100.0;
+        }
+
+        $avgOrderValue = $totalOrdersCount > 0 ? round($netRevenue / $totalOrdersCount, 2) : 0.0;
+
         // Critical Low Stock Watchlist (actionable directly from dashboard)
         $lowStockWatchlist = Inventory::with(['variant.product'])
             ->whereRaw('(on_hand_quantity - reserved_quantity) <= 5')
@@ -127,7 +151,7 @@ class AdminDashboardController extends Controller
             ]);
 
         // Recent 8 orders
-        $recentOrders = Order::with(['user:id,name,email', 'shippingAddress'])
+        $recentOrders = Order::with(['user:id,name,email', 'shippingAddress', 'payments'])
             ->latest()
             ->take(8)
             ->get()
@@ -137,6 +161,7 @@ class AdminDashboardController extends Controller
                 'customer_name' => $order->customer_name,
                 'status' => $order->fulfillment_status,
                 'payment_status' => $order->payment_status,
+                'payment_method' => $order->payments->last()?->gateway ?? 'cod',
                 'total_amount' => Money::format($order->grand_total),
                 'total_khr' => Money::toKhr($order->grand_total, $rate),
                 'created_at' => $order->created_at->format('M d, H:i'),
@@ -152,11 +177,18 @@ class AdminDashboardController extends Controller
                 'pending_orders' => $pendingOrdersCount,
                 'customers_count' => $customersCount,
                 'low_stock_count' => $lowStockCount,
+                'trend_percentage' => $trendPercentage,
+                'avg_order_value' => Money::format((string) $avgOrderValue),
+                'avg_order_value_khr' => Money::toKhr((string) $avgOrderValue, $rate),
             ],
             'chart' => [
                 'labels' => $chartLabels,
                 'data' => $chartData,
                 'period' => $period,
+                'period_total' => Money::format((string) $periodTotalRevenue),
+                'avg_daily' => Money::format((string) $avgDailyRevenue),
+                'peak_day' => $peakDayLabel,
+                'peak_amount' => Money::format((string) $maxChartVal),
             ],
             'lowStockWatchlist' => $lowStockWatchlist,
             'topSelling' => $topSelling,

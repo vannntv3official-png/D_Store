@@ -64,8 +64,27 @@ class HandleInertiaRequests extends Middleware
 
         $user = $request->user();
 
+        $adminBadges = null;
+        if ($request->is('admin*') && $user && $user->roles->isNotEmpty()) {
+            try {
+                $adminBadges = [
+                    'pending_orders' => \App\Models\Order::whereIn('fulfillment_status', [
+                        \App\Models\Order::FULFILLMENT_PENDING,
+                        \App\Models\Order::FULFILLMENT_CONFIRMED,
+                        \App\Models\Order::FULFILLMENT_PROCESSING,
+                    ])->count(),
+                    'low_stock' => \App\Models\Inventory::whereRaw('(on_hand_quantity - reserved_quantity) <= 5')->count(),
+                    'pending_refunds' => \App\Models\Refund::where('status', 'requested')->count(),
+                ];
+            } catch (\Throwable $e) {
+                // Graceful fallback if database schema is initializing
+                $adminBadges = null;
+            }
+        }
+
         return [
             ...parent::share($request),
+            'adminBadges' => $adminBadges,
             'auth' => [
                 'user' => $user ? [
                     'id' => $user->id,

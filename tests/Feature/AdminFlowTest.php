@@ -46,9 +46,14 @@ class AdminFlowTest extends TestCase
             ->component('Admin/Dashboard')
             ->has('metrics.paid_revenue')
             ->has('metrics.total_orders')
+            ->has('metrics.trend_percentage')
+            ->has('metrics.avg_order_value')
             ->has('chart.labels')
             ->has('chart.data')
+            ->has('chart.period_total')
             ->has('recentOrders')
+            ->has('adminBadges.pending_orders')
+            ->has('adminBadges.low_stock')
         );
     }
 
