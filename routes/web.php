@@ -65,6 +65,8 @@ Route::get('/checkout', [CheckoutController::class, 'create'])->name('checkout.c
 Route::post('/checkout', [CheckoutController::class, 'store'])->middleware('throttle:checkout')->name('checkout.store');
 
 Route::get('/orders/{orderNumber}/confirmed', [OrderTrackingController::class, 'confirmed'])->name('orders.confirmed');
+Route::get('/checkout/payment/khqr/{reference}', [OrderTrackingController::class, 'khqrSandboxCheckout'])->name('khqr.sandbox.checkout');
+Route::get('/checkout/payment/payway/{reference}', [OrderTrackingController::class, 'paywaySandboxCheckout'])->name('payway.sandbox.checkout');
 Route::get('/guest/orders/{token}', [OrderTrackingController::class, 'trackGuest'])->middleware('throttle:guest_orders')->name('orders.guest');
 
 Route::get('/pages/{slug}', [ContentController::class, 'page'])->name('pages.show');

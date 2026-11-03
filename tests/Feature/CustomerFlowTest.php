@@ -124,4 +124,47 @@ class CustomerFlowTest extends TestCase
             'payment_status' => 'pending',
         ]);
     }
+
+    public function test_customer_can_checkout_with_khqr_and_view_qr_confirmation(): void
+    {
+        $user = \App\Models\User::factory()->create();
+        $product = Product::where('status', 'active')->firstOrFail();
+        $variant = $product->variants()->firstOrFail();
+        $shipping = \App\Models\ShippingMethod::firstOrFail();
+
+        // Add to cart
+        $this->actingAs($user)->post(route('cart.store'), [
+            'variant_id' => $variant->id,
+            'quantity' => 1,
+        ]);
+
+        $checkoutData = [
+            'recipient_name' => 'Kong Vanndy',
+            'phone' => '0969015314',
+            'email' => 'kongvanndyofficial@gmail.com',
+            'province' => 'Phnom Penh',
+            'district' => 'Daun Penh',
+            'commune' => 'Phsar Kandal',
+            'street_address' => 'Norodom Blvd, House 12',
+            'delivery_notes' => 'Call on delivery',
+            'shipping_method_id' => $shipping->id,
+            'payment_method' => 'khqr_sandbox',
+            'idempotency_key' => \Illuminate\Support\Str::uuid()->toString(),
+        ];
+
+        $response = $this->actingAs($user)->post(route('checkout.store'), $checkoutData);
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $order = \App\Models\Order::where('user_id', $user->id)->latest()->firstOrFail();
+
+        // Follow redirect to confirmed page
+        $confirmedResponse = $this->actingAs($user)->get(route('orders.confirmed', ['orderNumber' => $order->order_number]));
+        $confirmedResponse->assertStatus(200);
+        $confirmedResponse->assertInertia(fn ($page) => $page
+            ->component('Customer/OrderConfirmed')
+            ->has('khqrPayload')
+            ->has('bankDetails')
+        );
+    }
 }

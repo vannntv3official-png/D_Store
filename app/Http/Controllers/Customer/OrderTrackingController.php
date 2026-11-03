@@ -6,9 +6,11 @@ namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\Payment;
 use App\Models\Setting;
-use App\Services\Payment\KhqrSandboxGateway;
+use App\Services\Payment\Adapters\KhqrSandboxGateway;
 use App\Services\Pricing\Money;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -47,7 +49,7 @@ class OrderTrackingController extends Controller
                 'currency' => $order->base_currency,
                 'store_name' => Setting::get('store_name', 'D STORE CAMBODIA'),
             ]);
-            $khqrPayload = $initResult['qr_string'] ?? null;
+            $khqrPayload = $initResult->qrCodePayload ?? null;
         }
 
         // Bank transfer details
@@ -177,5 +179,23 @@ class OrderTrackingController extends Controller
                 'amount' => Money::format($order->payments->last()->amount),
             ] : null,
         ];
+    }
+
+    public function khqrSandboxCheckout(Request $request, string $reference): RedirectResponse
+    {
+        $payment = Payment::where('merchant_reference', $reference)->firstOrFail();
+        return redirect()->route('orders.confirmed', [
+            'orderNumber' => $payment->order->order_number,
+            'token' => $payment->order->guest_token,
+        ]);
+    }
+
+    public function paywaySandboxCheckout(Request $request, string $reference): RedirectResponse
+    {
+        $payment = Payment::where('merchant_reference', $reference)->firstOrFail();
+        return redirect()->route('orders.confirmed', [
+            'orderNumber' => $payment->order->order_number,
+            'token' => $payment->order->guest_token,
+        ]);
     }
 }
