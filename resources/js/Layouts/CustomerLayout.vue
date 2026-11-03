@@ -304,20 +304,15 @@ onUnmounted(() => {
                             v-if="auth.user"
                             type="button"
                             @click="isUserDropdownOpen = !isUserDropdownOpen"
-                            class="flex items-center gap-2 p-1.5 sm:px-2 sm:py-1.5 rounded-xl hover:bg-[#F5F5F7] transition-all active:scale-95 cursor-pointer select-none"
+                            class="flex items-center gap-2 p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl hover:bg-[#F5F5F7] transition-all active:scale-95 cursor-pointer select-none"
                             :class="isUserDropdownOpen ? 'bg-[#F5F5F7]' : ''"
                         >
                             <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-[#111111] via-[#222226] to-[#3E3E46] text-white font-bold text-xs flex items-center justify-center shadow-xs ring-2 ring-white">
                                 {{ userInitials }}
                             </div>
-                            <div class="hidden sm:flex flex-col text-left leading-none">
-                                <span class="text-xs font-bold text-[#111111] max-w-[85px] truncate">
-                                    {{ auth.user.name }}
-                                </span>
-                                <span class="text-[9px] font-semibold text-[#86868B] mt-0.5">
-                                    {{ auth.is_staff ? 'Merchant' : 'Member' }}
-                                </span>
-                            </div>
+                            <span class="text-xs font-bold text-[#111111] max-w-[95px] truncate hidden sm:inline">
+                                {{ auth.user.name }}
+                            </span>
                             <ChevronDown class="w-3.5 h-3.5 text-[#86868B] transition-transform duration-200 hidden sm:block" :class="isUserDropdownOpen ? 'rotate-180 text-[#111111]' : ''" />
                         </button>
 
@@ -353,16 +348,6 @@ onUnmounted(() => {
                                             <p class="text-xs font-bold text-[#111111] truncate">{{ auth.user.name }}</p>
                                             <p class="text-[10.5px] text-[#86868B] truncate">{{ auth.user.phone || auth.user.email }}</p>
                                         </div>
-                                    </div>
-                                    <div class="mt-2.5 flex items-center justify-between text-[10px] text-[#86868B]">
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#F5F5F7] font-semibold text-[#111111]">
-                                            <Award class="w-3 h-3 text-[#D4AF37]" />
-                                            VIP Club
-                                        </span>
-                                        <span v-if="auth.is_staff" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#DCFCE7] text-[#166534] font-bold">
-                                            <ShieldCheck class="w-3 h-3" />
-                                            Staff
-                                        </span>
                                     </div>
                                 </div>
 
