@@ -115,68 +115,66 @@ const removeCoupon = () => {
                     <div
                         v-for="item in items"
                         :key="item.id"
-                        class="bg-white rounded-2xl p-5 border border-[#E5E5EA] flex flex-col sm:flex-row items-center gap-5 transition-shadow hover:shadow-sm"
+                        class="bg-white rounded-2xl p-4 sm:p-5 border border-[#E5E5EA] flex items-center gap-3.5 sm:gap-5 transition-shadow hover:shadow-sm"
                     >
                         <!-- Thumbnail -->
-                        <Link :href="`/products/${item.product_slug}`" class="w-20 h-20 sm:w-24 sm:h-24 bg-[#F5F5F7] rounded-xl p-2 shrink-0 flex items-center justify-center overflow-hidden">
+                        <Link :href="`/products/${item.product_slug}`" class="w-16 h-16 sm:w-24 sm:h-24 bg-[#F5F5F7] rounded-xl p-1.5 sm:p-2 shrink-0 flex items-center justify-center overflow-hidden">
                             <img :src="item.image_url" :alt="item.product_name_en" class="h-full w-full object-contain" />
                         </Link>
 
                         <!-- Item Info -->
-                        <div class="flex-1 min-w-0 text-center sm:text-left">
-                            <h3 class="text-sm font-bold text-[#111111] truncate">
+                        <div class="flex-1 min-w-0 text-left">
+                            <h3 class="text-xs sm:text-sm font-bold text-[#111111] truncate">
                                 <Link :href="`/products/${item.product_slug}`" class="hover:text-[#0071E3]">
                                     {{ currentLocale === 'km' && item.product_name_km ? item.product_name_km : item.product_name_en }}
                                 </Link>
                             </h3>
-                            <p class="text-[11px] text-[#86868B] font-mono mt-0.5">
+                            <p class="text-[10px] sm:text-[11px] text-[#86868B] font-mono mt-0.5 truncate">
                                 SKU: {{ item.variant_sku }}
                             </p>
                             <p class="text-xs font-semibold text-[#111111] mt-1">
                                 ${{ item.unit_price }}
-                                <span class="text-[10px] text-[#86868B] font-normal">({{ '៛' + item.unit_price_khr.toLocaleString() }})</span>
+                                <span class="text-[10px] text-[#86868B] font-normal hidden sm:inline">({{ '៛' + item.unit_price_khr.toLocaleString() }})</span>
                             </p>
                         </div>
 
-                        <!-- Quantity Selector -->
-                        <div class="flex items-center rounded-xl border border-[#E5E5EA] bg-[#F5F5F7] p-1">
-                            <button
-                                type="button"
-                                @click="updateQty(item, item.quantity - 1)"
-                                :disabled="item.quantity <= 1"
-                                class="p-1 text-[#86868B] hover:text-[#111111] disabled:opacity-30 cursor-pointer"
-                            >
-                                <Minus class="w-3.5 h-3.5" />
-                            </button>
-                            <span class="w-8 text-center text-xs font-bold text-[#111111]">
-                                {{ item.quantity }}
-                            </span>
-                            <button
-                                type="button"
-                                @click="updateQty(item, item.quantity + 1)"
-                                :disabled="item.quantity >= item.available_stock"
-                                class="p-1 text-[#86868B] hover:text-[#111111] disabled:opacity-30 cursor-pointer"
-                            >
-                                <Plus class="w-3.5 h-3.5" />
-                            </button>
-                        </div>
+                        <!-- Quantity Selector & Actions -->
+                        <div class="flex flex-col sm:flex-row items-end sm:items-center gap-2 sm:gap-4 shrink-0">
+                            <div class="flex items-center rounded-xl border border-[#E5E5EA] bg-[#F5F5F7] p-0.5 sm:p-1">
+                                <button
+                                    type="button"
+                                    @click="updateQty(item, item.quantity - 1)"
+                                    :disabled="item.quantity <= 1"
+                                    class="p-1 text-[#86868B] hover:text-[#111111] disabled:opacity-30 cursor-pointer"
+                                >
+                                    <Minus class="w-3 sm:w-3.5 h-3 sm:h-3.5" />
+                                </button>
+                                <span class="w-6 sm:w-8 text-center text-xs font-bold text-[#111111]">
+                                    {{ item.quantity }}
+                                </span>
+                                <button
+                                    type="button"
+                                    @click="updateQty(item, item.quantity + 1)"
+                                    :disabled="item.quantity >= item.available_stock"
+                                    class="p-1 text-[#86868B] hover:text-[#111111] disabled:opacity-30 cursor-pointer"
+                                >
+                                    <Plus class="w-3 sm:w-3.5 h-3 sm:h-3.5" />
+                                </button>
+                            </div>
 
-                        <!-- Line Total & Delete -->
-                        <div class="text-center sm:text-right shrink-0">
-                            <div class="text-sm font-bold text-[#111111]">
-                                ${{ item.subtotal }}
+                            <div class="text-right">
+                                <div class="text-xs sm:text-sm font-bold text-[#111111]">
+                                    ${{ item.subtotal }}
+                                </div>
+                                <button
+                                    type="button"
+                                    @click="removeItem(item)"
+                                    class="mt-1 text-[11px] text-[#DC2626] hover:underline flex items-center justify-end gap-1 font-medium cursor-pointer"
+                                >
+                                    <Trash2 class="w-3 h-3" />
+                                    <span>Remove</span>
+                                </button>
                             </div>
-                            <div class="text-[10px] text-[#86868B]">
-                                ៛{{ item.subtotal_khr.toLocaleString() }}
-                            </div>
-                            <button
-                                type="button"
-                                @click="removeItem(item)"
-                                class="mt-2 text-xs text-[#DC2626] hover:underline flex items-center justify-center sm:justify-end gap-1 font-medium cursor-pointer"
-                            >
-                                <Trash2 class="w-3.5 h-3.5" />
-                                <span>Remove</span>
-                            </button>
                         </div>
                     </div>
                 </div>

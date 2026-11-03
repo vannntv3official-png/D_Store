@@ -388,7 +388,7 @@ const submitOrder = () => {
 
                 <!-- Right 5 Columns: Order Summary & Placement -->
                 <div class="lg:col-span-5 space-y-6">
-                    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-[#E5E5EA] shadow-sm space-y-6 sticky top-24">
+                    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-[#E5E5EA] shadow-sm space-y-6 lg:sticky lg:top-24">
                         <h2 class="text-base font-bold text-[#111111]">
                             {{ t('checkout.order_summary') }}
                         </h2>

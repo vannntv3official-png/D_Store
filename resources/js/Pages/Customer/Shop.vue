@@ -6,7 +6,7 @@ import ProductCard from '@/Components/ProductCard.vue';
 import Button from '@/Components/Button.vue';
 import CustomDropdown from '@/Components/CustomDropdown.vue';
 import { useTrans } from '@/Composables/useTrans';
-import { Filter, SlidersHorizontal, RotateCcw, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-vue-next';
+import { Filter, SlidersHorizontal, RotateCcw, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, X } from 'lucide-vue-next';
 
 interface Props {
     products: {
@@ -66,6 +66,17 @@ const displayedBrands = computed(() => {
         return props.brands;
     }
     return props.brands.slice(0, 7);
+});
+
+const isMobileFilterDrawerOpen = ref(false);
+
+const activeFilterCount = computed(() => {
+    let count = 0;
+    if (form.category) count++;
+    if (form.brand) count++;
+    if (form.min_price || form.max_price) count++;
+    if (form.in_stock) count++;
+    return count;
 });
 
 const applyFilters = () => {
@@ -128,8 +139,8 @@ const clearFilters = () => {
 
             <!-- Two-Column Grid: Filter Sidebar + Products -->
             <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
-                <!-- Sidebar Filters (Sticky - Never Scrolls Away with Page) -->
-                <aside class="space-y-6 lg:sticky lg:top-24 self-start">
+                <!-- Sidebar Filters (Desktop Sticky - Never Scrolls Away with Page) -->
+                <aside class="space-y-6 lg:sticky lg:top-24 self-start hidden lg:block">
                     <div class="bg-white rounded-3xl p-6 border border-[#E5E5EA] shadow-sm space-y-6 max-h-[calc(100vh-8rem)] overflow-y-auto d-scrollbar">
                         <div class="flex items-center justify-between pb-4 border-b border-[#F5F5F7]">
                             <h3 class="text-xs font-bold uppercase tracking-wider text-[#111111] flex items-center gap-2">
@@ -253,9 +264,31 @@ const clearFilters = () => {
                     </div>
                 </aside>
 
-                <!-- Products Grid -->
+                <!-- Products Grid & Mobile Toolbar -->
                 <div class="lg:col-span-3">
-                    <div v-if="products.data.length > 0" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                    <!-- Mobile & Tablet Filter Trigger Strip -->
+                    <div class="lg:hidden flex items-center justify-between gap-3 mb-6 bg-white p-3 rounded-2xl border border-[#E5E5EA] shadow-xs">
+                        <button
+                            type="button"
+                            @click="isMobileFilterDrawerOpen = true"
+                            class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#F5F5F7] text-xs font-bold text-[#111111] hover:bg-[#EAEAEA] active:scale-95 transition-all cursor-pointer select-none"
+                        >
+                            <SlidersHorizontal class="w-3.5 h-3.5" />
+                            <span>{{ t('shop.filter_by') }}</span>
+                            <span
+                                v-if="activeFilterCount > 0"
+                                class="w-5 h-5 rounded-full bg-[#111111] text-white text-[10px] flex items-center justify-center font-bold"
+                            >
+                                {{ activeFilterCount }}
+                            </span>
+                        </button>
+
+                        <span class="text-xs text-[#86868B] font-medium">
+                            {{ products.total }} items
+                        </span>
+                    </div>
+
+                    <div v-if="products.data.length > 0" class="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-3 gap-3.5 sm:gap-6">
                         <ProductCard
                             v-for="product in products.data"
                             :key="product.id"
@@ -296,5 +329,152 @@ const clearFilters = () => {
                 </div>
             </div>
         </div>
+
+        <!-- Mobile & Tablet Filter Drawer / Sheet -->
+        <Teleport to="body">
+            <div
+                v-if="isMobileFilterDrawerOpen"
+                class="fixed inset-0 z-50 lg:hidden flex justify-end"
+            >
+                <!-- Backdrop -->
+                <div
+                    @click="isMobileFilterDrawerOpen = false"
+                    class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+                ></div>
+
+                <!-- Slide-over Content -->
+                <div class="relative w-full max-w-md bg-white h-full flex flex-col z-10 shadow-2xl pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+                    <!-- Drawer Header -->
+                    <div class="h-16 px-6 border-b border-[#E5E5EA] flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <SlidersHorizontal class="w-4 h-4 text-[#111111]" />
+                            <h3 class="text-sm font-bold uppercase tracking-wider text-[#111111]">
+                                {{ t('shop.filter_by') }}
+                            </h3>
+                            <span v-if="activeFilterCount > 0" class="px-2 py-0.5 rounded-full bg-[#111111] text-white text-[10px] font-bold">
+                                {{ activeFilterCount }}
+                            </span>
+                        </div>
+
+                        <div class="flex items-center gap-4">
+                            <button
+                                v-if="activeFilterCount > 0"
+                                type="button"
+                                @click="clearFilters(); isMobileFilterDrawerOpen = false"
+                                class="text-xs text-[#DC2626] hover:underline font-semibold cursor-pointer"
+                            >
+                                {{ t('shop.clear_filters') }}
+                            </button>
+                            <button
+                                type="button"
+                                @click="isMobileFilterDrawerOpen = false"
+                                class="p-2 rounded-xl text-[#86868B] hover:text-[#111111] hover:bg-[#F5F5F7] transition-colors cursor-pointer"
+                            >
+                                <X class="w-5 h-5" />
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Drawer Scrollable Body -->
+                    <div class="flex-1 overflow-y-auto p-6 space-y-6 d-scrollbar">
+                        <!-- Categories Filter -->
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold uppercase tracking-wider text-[#86868B]">
+                                {{ t('nav.categories') }}
+                            </label>
+                            <div class="space-y-1">
+                                <button
+                                    type="button"
+                                    @click="form.category = ''; applyFilters(); isMobileFilterDrawerOpen = false"
+                                    class="w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium transition-[background-color,color] duration-150 flex items-center justify-between cursor-pointer"
+                                    :class="!form.category ? 'bg-[#111111] text-white shadow-sm font-semibold' : 'text-[#1D1D1F] hover:bg-[#F5F5F7]'"
+                                >
+                                    <span>{{ t('shop.all_categories') }}</span>
+                                </button>
+                                <button
+                                    v-for="cat in categories"
+                                    :key="cat.id"
+                                    type="button"
+                                    @click="form.category = cat.slug; applyFilters(); isMobileFilterDrawerOpen = false"
+                                    class="w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium transition-[background-color,color] duration-150 flex items-center justify-between cursor-pointer"
+                                    :class="form.category === cat.slug ? 'bg-[#111111] text-white shadow-sm font-semibold' : 'text-[#1D1D1F] hover:bg-[#F5F5F7]'"
+                                >
+                                    <span>{{ currentLocale === 'km' && cat.name_km ? cat.name_km : cat.name_en }}</span>
+                                    <span class="text-[10px] opacity-60">({{ cat.products_count }})</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Brands Filter -->
+                        <div class="space-y-2 pt-4 border-t border-[#F5F5F7]">
+                            <label class="text-xs font-bold uppercase tracking-wider text-[#86868B]">
+                                Brands
+                            </label>
+                            <div class="space-y-1">
+                                <button
+                                    v-for="brand in brands"
+                                    :key="brand.id"
+                                    type="button"
+                                    @click="form.brand = (form.brand === brand.slug ? '' : brand.slug); applyFilters(); isMobileFilterDrawerOpen = false"
+                                    class="w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-medium transition-[background-color,color] duration-150 flex items-center justify-between cursor-pointer"
+                                    :class="form.brand === brand.slug ? 'bg-[#111111] text-white shadow-sm font-semibold' : 'text-[#1D1D1F] hover:bg-[#F5F5F7]'"
+                                >
+                                    <span>{{ brand.name }}</span>
+                                    <span class="text-[10px] opacity-60">({{ brand.products_count }})</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Price Range -->
+                        <div class="space-y-2 pt-4 border-t border-[#F5F5F7]">
+                            <label class="text-xs font-bold uppercase tracking-wider text-[#86868B]">
+                                {{ t('shop.price_range') }} (USD)
+                            </label>
+                            <div class="flex items-center gap-2">
+                                <input
+                                    v-model="form.min_price"
+                                    type="number"
+                                    placeholder="Min"
+                                    class="w-full px-3 py-2.5 bg-[#F5F5F7] rounded-xl text-xs border border-[#E5E5EA] focus:outline-none focus:border-[#111111]"
+                                />
+                                <span class="text-[#86868B]">-</span>
+                                <input
+                                    v-model="form.max_price"
+                                    type="number"
+                                    placeholder="Max"
+                                    class="w-full px-3 py-2.5 bg-[#F5F5F7] rounded-xl text-xs border border-[#E5E5EA] focus:outline-none focus:border-[#111111]"
+                                />
+                            </div>
+                        </div>
+
+                        <!-- In Stock Only Toggle -->
+                        <div class="pt-4 border-t border-[#F5F5F7]">
+                            <label class="flex items-center gap-3 cursor-pointer py-1">
+                                <input
+                                    v-model="form.in_stock"
+                                    type="checkbox"
+                                    class="rounded text-[#111111] focus:ring-[#111111] w-5 h-5 cursor-pointer"
+                                />
+                                <span class="text-sm font-medium text-[#1D1D1F]">
+                                    {{ t('shop.in_stock_only') }}
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Drawer Footer Action -->
+                    <div class="p-4 border-t border-[#E5E5EA] bg-white">
+                        <Button
+                            variant="primary"
+                            size="lg"
+                            class="w-full"
+                            @click="applyFilters(); isMobileFilterDrawerOpen = false"
+                        >
+                            Show Results ({{ products.total }})
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        </Teleport>
     </CustomerLayout>
 </template>

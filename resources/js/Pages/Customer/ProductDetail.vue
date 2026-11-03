@@ -175,10 +175,10 @@ const submitReview = () => {
             </nav>
 
             <!-- Main Product Two-Column Layout -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-16">
                 <!-- Left: Media Gallery -->
                 <div class="space-y-4">
-                    <div class="relative aspect-square w-full rounded-3xl bg-white border border-[#E5E5EA] overflow-hidden flex items-center justify-center p-8 shadow-sm">
+                    <div class="relative aspect-square w-full rounded-3xl bg-white border border-[#E5E5EA] overflow-hidden flex items-center justify-center p-4 sm:p-8 shadow-sm">
                         <img
                             :src="selectedImage"
                             :alt="localizedTitle"

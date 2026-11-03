@@ -620,8 +620,8 @@ const getPaymentMethodLabel = (method?: string) => {
                     </Link>
                 </div>
 
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
+                <div class="overflow-x-auto d-scrollbar">
+                    <table class="w-full text-left border-collapse min-w-[800px]">
                         <thead>
                             <tr class="bg-[#FBFBFC] border-b border-[#F5F5F7] text-[10px] font-extrabold uppercase tracking-wider text-[#86868B]">
                                 <th class="py-3.5 px-6">Order Number</th>

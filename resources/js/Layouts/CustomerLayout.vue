@@ -4,7 +4,7 @@ import { Link, usePage, router } from '@inertiajs/vue3';
 import { useTrans } from '@/Composables/useTrans';
 import { 
     Search, ShoppingBag, Heart, User as UserIcon, Menu, X, 
-    Globe, DollarSign, ChevronDown, Check, ShieldCheck 
+    Globe, DollarSign, ChevronDown, Check, ShieldCheck, Home, LayoutGrid 
 } from 'lucide-vue-next';
 
 const { t, currentLocale, currentCurrency, setLocale, setCurrency } = useTrans();
@@ -297,10 +297,67 @@ const logout = () => {
             </div>
         </div>
 
-        <!-- Main Content Slot -->
-        <main class="flex-1">
+        <!-- Main Content Slot (with mobile bottom padding for native dock) -->
+        <main class="flex-1 pb-20 md:pb-0">
             <slot />
         </main>
+
+        <!-- Native Mobile Bottom Tab Navigation Dock (iOS / Android) -->
+        <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-t border-[#E5E5EA] px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-lg flex items-center justify-around select-none">
+            <Link
+                href="/"
+                class="flex flex-col items-center gap-1 py-1 px-3 text-[10px] font-semibold transition-colors touch-manipulation active:scale-95"
+                :class="page.url === '/' ? 'text-[#111111]' : 'text-[#86868B] hover:text-[#111111]'"
+            >
+                <Home class="w-5 h-5" :class="page.url === '/' ? 'stroke-[2.5]' : 'stroke-2'" />
+                <span>Home</span>
+            </Link>
+
+            <Link
+                href="/shop"
+                class="flex flex-col items-center gap-1 py-1 px-3 text-[10px] font-semibold transition-colors touch-manipulation active:scale-95"
+                :class="page.url.startsWith('/shop') ? 'text-[#111111]' : 'text-[#86868B] hover:text-[#111111]'"
+            >
+                <LayoutGrid class="w-5 h-5" :class="page.url.startsWith('/shop') ? 'stroke-[2.5]' : 'stroke-2'" />
+                <span>Shop</span>
+            </Link>
+
+            <Link
+                href="/cart"
+                class="flex flex-col items-center gap-1 py-1 px-3 text-[10px] font-semibold transition-colors touch-manipulation active:scale-95 relative"
+                :class="page.url.startsWith('/cart') ? 'text-[#111111]' : 'text-[#86868B] hover:text-[#111111]'"
+            >
+                <div class="relative">
+                    <ShoppingBag class="w-5 h-5" :class="page.url.startsWith('/cart') ? 'stroke-[2.5]' : 'stroke-2'" />
+                    <span
+                        v-if="cart.item_count > 0"
+                        class="absolute -top-1.5 -right-2 min-w-4 h-4 px-1 bg-[#111111] text-white text-[9px] font-bold rounded-full flex items-center justify-center animate-pulse"
+                    >
+                        {{ cart.item_count }}
+                    </span>
+                </div>
+                <span>Cart</span>
+            </Link>
+
+            <Link
+                v-if="auth.user"
+                href="/account/wishlist"
+                class="flex flex-col items-center gap-1 py-1 px-3 text-[10px] font-semibold transition-colors touch-manipulation active:scale-95"
+                :class="page.url.startsWith('/account/wishlist') ? 'text-[#111111]' : 'text-[#86868B] hover:text-[#111111]'"
+            >
+                <Heart class="w-5 h-5" :class="page.url.startsWith('/account/wishlist') ? 'stroke-[2.5]' : 'stroke-2'" />
+                <span>Wishlist</span>
+            </Link>
+
+            <Link
+                :href="auth.user ? '/account/profile' : '/login'"
+                class="flex flex-col items-center gap-1 py-1 px-3 text-[10px] font-semibold transition-colors touch-manipulation active:scale-95"
+                :class="page.url.startsWith('/account') || page.url.startsWith('/login') ? 'text-[#111111]' : 'text-[#86868B] hover:text-[#111111]'"
+            >
+                <UserIcon class="w-5 h-5" :class="page.url.startsWith('/account') || page.url.startsWith('/login') ? 'stroke-[2.5]' : 'stroke-2'" />
+                <span>{{ auth.user ? 'Account' : 'Sign In' }}</span>
+            </Link>
+        </nav>
 
         <!-- Luxury Apple-Inspired Footer -->
         <footer class="bg-white border-t border-[#E5E5EA] mt-24">

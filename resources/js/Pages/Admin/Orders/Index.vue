@@ -143,8 +143,8 @@ const getStatusBadgeVariant = (status: string) => {
 
             <!-- Table -->
             <div class="bg-white rounded-3xl border border-[#E5E5EA] shadow-sm overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
+                <div class="overflow-x-auto d-scrollbar">
+                    <table class="w-full text-left border-collapse min-w-[760px]">
                         <thead>
                             <tr class="bg-[#FBFBFC] border-b border-[#F5F5F7] text-[11px] font-bold uppercase tracking-wider text-[#86868B]">
                                 <th class="py-3.5 px-6">Order</th>
