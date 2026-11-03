@@ -127,10 +127,10 @@ const clearFilters = () => {
             </div>
 
             <!-- Two-Column Grid: Filter Sidebar + Products -->
-            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                <!-- Sidebar Filters -->
-                <aside class="space-y-6">
-                    <div class="bg-white rounded-3xl p-6 border border-[#E5E5EA] shadow-sm space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
+                <!-- Sidebar Filters (Sticky - Never Scrolls Away with Page) -->
+                <aside class="space-y-6 lg:sticky lg:top-24 self-start">
+                    <div class="bg-white rounded-3xl p-6 border border-[#E5E5EA] shadow-sm space-y-6 max-h-[calc(100vh-8rem)] overflow-y-auto d-scrollbar">
                         <div class="flex items-center justify-between pb-4 border-b border-[#F5F5F7]">
                             <h3 class="text-xs font-bold uppercase tracking-wider text-[#111111] flex items-center gap-2">
                                 <SlidersHorizontal class="w-4 h-4" />

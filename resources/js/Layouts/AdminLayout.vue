@@ -217,12 +217,12 @@ const userRole = computed(() => {
             class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-200"
         ></div>
 
-        <!-- Sidebar (Desktop & Mobile Off-canvas) -->
+        <!-- Sidebar (Desktop & Mobile Off-canvas) - Fixed to Left, Never Scrolls With Page -->
         <aside
-            class="fixed inset-y-0 left-0 z-50 lg:static bg-[#111111] text-white flex flex-col shrink-0 border-r border-white/10 transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)]"
+            class="fixed inset-y-0 left-0 z-40 bg-[#111111] text-white flex flex-col shrink-0 border-r border-white/10 transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)]"
             :class="[
                 isCollapsed ? 'lg:w-20' : 'lg:w-64',
-                isMobileOpen ? 'translate-x-0 w-72 shadow-2xl' : '-translate-x-full lg:translate-x-0'
+                isMobileOpen ? 'translate-x-0 w-72 shadow-2xl z-50' : '-translate-x-full lg:translate-x-0'
             ]"
         >
             <!-- Brand Portal Header -->
@@ -276,7 +276,7 @@ const userRole = computed(() => {
             </div>
 
             <!-- Hierarchical Navigation Links -->
-            <nav class="flex-1 px-3 py-4 space-y-6 overflow-y-auto custom-scrollbar">
+            <nav class="flex-1 px-3 py-4 space-y-6 overflow-y-auto d-scrollbar">
                 <div v-for="section in navSections" :key="section.title" class="space-y-1">
                     <!-- Section Title (hidden when collapsed on desktop) -->
                     <div
@@ -380,8 +380,13 @@ const userRole = computed(() => {
             </div>
         </aside>
 
-        <!-- Main Content Area -->
-        <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+        <!-- Main Content Area (Offset by Fixed Sidebar on Desktop) -->
+        <div
+            class="flex-1 flex flex-col min-w-0 transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)]"
+            :class="[
+                isCollapsed ? 'lg:pl-20' : 'lg:pl-64'
+            ]"
+        >
             <!-- Top Admin Header Bar -->
             <header class="h-16 bg-white border-b border-[#E5E5EA] px-4 sm:px-8 flex items-center justify-between sticky top-0 z-30 shadow-xs">
                 <!-- Left: Hamburger toggle on mobile & Title Slot -->
