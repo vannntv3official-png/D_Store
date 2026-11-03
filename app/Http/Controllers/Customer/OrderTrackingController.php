@@ -23,6 +23,21 @@ class OrderTrackingController extends Controller
             ->with(['items.variant.product.images', 'shippingAddress', 'payments', 'shipments'])
             ->firstOrFail();
 
+        // IDOR Defense: Authorization check
+        $user = $request->user();
+        $sessionGuestToken = session('guest_token');
+        $requestToken = $request->query('token');
+
+        $isOwner = $user && $order->user_id === $user->id;
+        $isStaff = $user && $user->isStaff();
+        $hasMatchingGuestToken = !empty($order->guest_token) && (
+            $sessionGuestToken === $order->guest_token || $requestToken === $order->guest_token
+        );
+
+        if (!$isOwner && !$isStaff && !$hasMatchingGuestToken) {
+            abort(403, 'Unauthorized access to order.');
+        }
+
         // If KHQR, generate EMVCo QR code payload for display
         $khqrPayload = null;
         $latestPayment = $order->payments->last();

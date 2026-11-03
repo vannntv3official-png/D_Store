@@ -265,9 +265,10 @@ class ProductAdminController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
-    protected function sanitizeCsvField(string $field): string
+    public static function sanitizeCsvField(string $field): string
     {
-        if (in_array(substr($field, 0, 1), ['=', '+', '-', '@'], true)) {
+        $trimmed = ltrim($field);
+        if ($trimmed !== '' && in_array($trimmed[0], ['=', '+', '-', '@', "\t", "\r", '|'], true)) {
             return "'" . $field;
         }
         return $field;

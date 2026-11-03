@@ -62,17 +62,17 @@ Route::post('/cart/coupon', [CartController::class, 'applyCoupon'])->name('cart.
 Route::delete('/cart/coupon', [CartController::class, 'removeCoupon'])->name('cart.coupon.remove');
 
 Route::get('/checkout', [CheckoutController::class, 'create'])->name('checkout.create');
-Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+Route::post('/checkout', [CheckoutController::class, 'store'])->middleware('throttle:checkout')->name('checkout.store');
 
 Route::get('/orders/{orderNumber}/confirmed', [OrderTrackingController::class, 'confirmed'])->name('orders.confirmed');
-Route::get('/guest/orders/{token}', [OrderTrackingController::class, 'trackGuest'])->name('orders.guest');
+Route::get('/guest/orders/{token}', [OrderTrackingController::class, 'trackGuest'])->middleware('throttle:guest_orders')->name('orders.guest');
 
 Route::get('/pages/{slug}', [ContentController::class, 'page'])->name('pages.show');
 Route::get('/page/{slug}', [ContentController::class, 'page'])->name('page.show');
 Route::get('/sitemap.xml', [ContentController::class, 'sitemap'])->name('sitemap');
 Route::get('/contact', [ContentController::class, 'contact'])->name('contact');
-Route::post('/contact', [ContentController::class, 'submitContact'])->name('contact.submit');
-Route::post('/newsletter/subscribe', [ContentController::class, 'subscribeNewsletter'])->name('newsletter.subscribe');
+Route::post('/contact', [ContentController::class, 'submitContact'])->middleware('throttle:contact')->name('contact.submit');
+Route::post('/newsletter/subscribe', [ContentController::class, 'subscribeNewsletter'])->middleware('throttle:contact')->name('newsletter.subscribe');
 
 /*
 |--------------------------------------------------------------------------
@@ -81,9 +81,9 @@ Route::post('/newsletter/subscribe', [ContentController::class, 'subscribeNewsle
 */
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
-    Route::post('/login', [AuthenticatedSessionController::class, 'store']);
+    Route::post('/login', [AuthenticatedSessionController::class, 'store'])->middleware('throttle:login');
     Route::get('/register', [RegisteredUserController::class, 'create'])->name('register');
-    Route::post('/register', [RegisteredUserController::class, 'store']);
+    Route::post('/register', [RegisteredUserController::class, 'store'])->middleware('throttle:register');
 });
 
 Route::middleware('auth')->group(function () {
@@ -116,65 +116,96 @@ Route::middleware('auth')->group(function () {
 */
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/login', [AdminAuthController::class, 'create'])->name('login');
-    Route::post('/login', [AdminAuthController::class, 'store']);
+    Route::post('/login', [AdminAuthController::class, 'store'])->middleware('throttle:login');
     Route::post('/logout', [AdminAuthController::class, 'destroy'])->name('logout');
 
     Route::middleware(['auth', 'staff'])->group(function () {
         Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
 
         // Products & Catalog
-        Route::get('/products', [ProductAdminController::class, 'index'])->name('products.index');
-        Route::get('/products/create', [ProductAdminController::class, 'create'])->name('products.create');
-        Route::post('/products', [ProductAdminController::class, 'store'])->name('products.store');
-        Route::get('/products/{id}/edit', [ProductAdminController::class, 'edit'])->name('products.edit');
-        Route::put('/products/{id}', [ProductAdminController::class, 'update'])->name('products.update');
-        Route::delete('/products/{id}', [ProductAdminController::class, 'destroy'])->name('products.destroy');
-        Route::get('/products/export', [ProductAdminController::class, 'exportCsv'])->name('products.export');
-        Route::get('/products/export/csv', [ProductAdminController::class, 'exportCsv'])->name('products.export.csv');
+        Route::middleware('permission:catalog.view')->group(function () {
+            Route::get('/products', [ProductAdminController::class, 'index'])->name('products.index');
+            Route::get('/products/export', [ProductAdminController::class, 'exportCsv'])->name('products.export');
+            Route::get('/products/export/csv', [ProductAdminController::class, 'exportCsv'])->name('products.export.csv');
+            Route::get('/categories', [CategoryAdminController::class, 'index'])->name('categories.index');
+        });
 
-        // Categories
-        Route::get('/categories', [CategoryAdminController::class, 'index'])->name('categories.index');
-        Route::post('/categories', [CategoryAdminController::class, 'store'])->name('categories.store');
-        Route::put('/categories/{id}', [CategoryAdminController::class, 'update'])->name('categories.update');
-        Route::delete('/categories/{id}', [CategoryAdminController::class, 'destroy'])->name('categories.destroy');
+        Route::middleware('permission:catalog.create')->group(function () {
+            Route::get('/products/create', [ProductAdminController::class, 'create'])->name('products.create');
+            Route::post('/products', [ProductAdminController::class, 'store'])->name('products.store');
+            Route::post('/categories', [CategoryAdminController::class, 'store'])->name('categories.store');
+        });
+
+        Route::middleware('permission:catalog.edit')->group(function () {
+            Route::get('/products/{id}/edit', [ProductAdminController::class, 'edit'])->name('products.edit');
+            Route::put('/products/{id}', [ProductAdminController::class, 'update'])->name('products.update');
+            Route::put('/categories/{id}', [CategoryAdminController::class, 'update'])->name('categories.update');
+        });
+
+        Route::middleware('permission:catalog.delete')->group(function () {
+            Route::delete('/products/{id}', [ProductAdminController::class, 'destroy'])->name('products.destroy');
+            Route::delete('/categories/{id}', [CategoryAdminController::class, 'destroy'])->name('categories.destroy');
+        });
 
         // Orders & Invoices
-        Route::get('/orders', [OrderAdminController::class, 'index'])->name('orders.index');
-        Route::get('/orders/{id}', [OrderAdminController::class, 'show'])->name('orders.show');
-        Route::post('/orders/{id}/transition', [OrderAdminController::class, 'transition'])->name('orders.transition');
-        Route::get('/orders/{id}/invoice', [OrderAdminController::class, 'invoice'])->name('orders.invoice');
+        Route::middleware('permission:orders.view')->group(function () {
+            Route::get('/orders', [OrderAdminController::class, 'index'])->name('orders.index');
+            Route::get('/orders/{id}', [OrderAdminController::class, 'show'])->name('orders.show');
+            Route::get('/orders/{id}/invoice', [OrderAdminController::class, 'invoice'])->name('orders.invoice');
+        });
+        Route::post('/orders/{id}/transition', [OrderAdminController::class, 'transition'])
+            ->middleware('permission:orders.process')
+            ->name('orders.transition');
 
         // Refunds & Inspections
-        Route::get('/refunds', [RefundAdminController::class, 'index'])->name('refunds.index');
-        Route::post('/refunds', [RefundAdminController::class, 'store'])->name('refunds.store');
-        Route::post('/refunds/{id}/restock', [RefundAdminController::class, 'inspectAndRestock'])->name('refunds.restock');
+        Route::get('/refunds', [RefundAdminController::class, 'index'])
+            ->middleware('permission:refunds.view')
+            ->name('refunds.index');
+        Route::post('/refunds', [RefundAdminController::class, 'store'])
+            ->middleware('permission:refunds.create')
+            ->name('refunds.store');
+        Route::post('/refunds/{id}/restock', [RefundAdminController::class, 'inspectAndRestock'])
+            ->middleware('permission:refunds.approve')
+            ->name('refunds.restock');
 
         // Inventory Stock & Audit Movements
-        Route::get('/inventory', [InventoryAdminController::class, 'index'])->name('inventory.index');
-        Route::post('/inventory/adjust', [InventoryAdminController::class, 'adjust'])->name('inventory.adjust');
-        Route::get('/inventory/movements', [InventoryAdminController::class, 'movements'])->name('inventory.movements');
+        Route::middleware('permission:inventory.view')->group(function () {
+            Route::get('/inventory', [InventoryAdminController::class, 'index'])->name('inventory.index');
+            Route::get('/inventory/movements', [InventoryAdminController::class, 'movements'])->name('inventory.movements');
+        });
+        Route::post('/inventory/adjust', [InventoryAdminController::class, 'adjust'])
+            ->middleware('permission:inventory.adjust')
+            ->name('inventory.adjust');
 
         // Marketing
-        Route::get('/marketing', [MarketingAdminController::class, 'index'])->name('marketing.index');
-        Route::post('/marketing/coupons', [MarketingAdminController::class, 'storeCoupon'])->name('marketing.coupons.store');
-        Route::post('/marketing/coupons/{id}/toggle', [MarketingAdminController::class, 'toggleCoupon'])->name('marketing.coupons.toggle');
-        Route::post('/marketing/banners', [MarketingAdminController::class, 'storeBanner'])->name('marketing.banners.store');
-        Route::delete('/marketing/banners/{id}', [MarketingAdminController::class, 'deleteBanner'])->name('marketing.banners.destroy');
+        Route::middleware('permission:marketing.manage')->group(function () {
+            Route::get('/marketing', [MarketingAdminController::class, 'index'])->name('marketing.index');
+            Route::post('/marketing/coupons', [MarketingAdminController::class, 'storeCoupon'])->name('marketing.coupons.store');
+            Route::post('/marketing/coupons/{id}/toggle', [MarketingAdminController::class, 'toggleCoupon'])->name('marketing.coupons.toggle');
+            Route::post('/marketing/banners', [MarketingAdminController::class, 'storeBanner'])->name('marketing.banners.store');
+            Route::delete('/marketing/banners/{id}', [MarketingAdminController::class, 'deleteBanner'])->name('marketing.banners.destroy');
+        });
 
         // Loyalty Rules & Adjustments
-        Route::get('/loyalty', [LoyaltyAdminController::class, 'index'])->name('loyalty.index');
-        Route::post('/loyalty/adjust', [LoyaltyAdminController::class, 'adjust'])->name('loyalty.adjust');
-        Route::post('/loyalty/rewards', [LoyaltyAdminController::class, 'storeReward'])->name('loyalty.rewards.store');
+        Route::middleware('permission:loyalty.manage')->group(function () {
+            Route::get('/loyalty', [LoyaltyAdminController::class, 'index'])->name('loyalty.index');
+            Route::post('/loyalty/adjust', [LoyaltyAdminController::class, 'adjust'])->name('loyalty.adjust');
+            Route::post('/loyalty/rewards', [LoyaltyAdminController::class, 'storeReward'])->name('loyalty.rewards.store');
+        });
 
         // Staff & RBAC
-        Route::get('/staff', [StaffAdminController::class, 'index'])->name('staff.index');
-        Route::post('/staff', [StaffAdminController::class, 'store'])->name('staff.store');
-        Route::put('/staff/{id}/roles', [StaffAdminController::class, 'updateRoles'])->name('staff.roles.update');
-        Route::post('/staff/{id}/toggle', [StaffAdminController::class, 'toggleActive'])->name('staff.toggle');
+        Route::middleware('permission:staff.manage')->group(function () {
+            Route::get('/staff', [StaffAdminController::class, 'index'])->name('staff.index');
+            Route::post('/staff', [StaffAdminController::class, 'store'])->name('staff.store');
+            Route::put('/staff/{id}/roles', [StaffAdminController::class, 'updateRoles'])->name('staff.roles.update');
+            Route::post('/staff/{id}/toggle', [StaffAdminController::class, 'toggleActive'])->name('staff.toggle');
+        });
 
         // Settings
-        Route::get('/settings', [SettingAdminController::class, 'index'])->name('settings.index');
-        Route::post('/settings', [SettingAdminController::class, 'update'])->name('settings.update');
-        Route::put('/settings', [SettingAdminController::class, 'update'])->name('settings.update.put');
+        Route::middleware('permission:settings.manage')->group(function () {
+            Route::get('/settings', [SettingAdminController::class, 'index'])->name('settings.index');
+            Route::post('/settings', [SettingAdminController::class, 'update'])->name('settings.update');
+            Route::put('/settings', [SettingAdminController::class, 'update'])->name('settings.update.put');
+        });
     });
 });

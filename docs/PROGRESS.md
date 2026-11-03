@@ -60,7 +60,14 @@
     - Added `admin:password` management command for safe CLI credential updates without raw database edits.
   - Full Vue 3 frontend typecheck verification: `npm run typecheck` (`vue-tsc --noEmit`) -> 0 errors.
   - Full Vite production bundle compilation: `npm run build` -> 0 errors (2,387 modules transformed).
-  - Comprehensive PHPUnit test suite: `php artisan test` -> 36 tests, 180 assertions, 100% passed on live MySQL.
+  - Comprehensive PHPUnit test suite: `php artisan test` -> 43 tests, 222 assertions, 100% passed on live MySQL.
+  - Comprehensive Security Hardening & Automated Testing:
+    - Added `SecurityHeaders` middleware: `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `X-XSS-Protection`, `Referrer-Policy`, `Permissions-Policy`.
+    - Configured named rate limiters (`login`, `register`, `checkout`, `contact`, `guest_orders`) defending against brute-force, scraping, and DoS.
+    - Attached granular RBAC `permission:...` middleware to all admin functional sub-routes enforcing least privilege.
+    - Hardened `/orders/{orderNumber}/confirmed` against IDOR enumeration attacks.
+    - Enhanced CSV formula injection sanitization (`ProductAdminController::sanitizeCsvField`) to cover whitespace-trimmed `=, +, -, @, \t, \r, |`.
+    - Added `SecurityTest.php` covering all threat vectors with 7 tests and 42 assertions.
   - All requirements REQ-001 through REQ-027 verified.
 
 ---
