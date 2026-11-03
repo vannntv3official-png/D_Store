@@ -3,7 +3,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import CustomerLayout from '@/Layouts/CustomerLayout.vue';
 import Button from '@/Components/Button.vue';
 import { useTrans } from '@/Composables/useTrans';
-import { CheckCircle2, QrCode, Landmark, Copy, Check, Printer } from 'lucide-vue-next';
+import { CheckCircle2, QrCode, Landmark, Copy, Check, Printer, CreditCard, ExternalLink, Zap } from 'lucide-vue-next';
 import { ref } from 'vue';
 
 interface Props {
@@ -24,6 +24,16 @@ interface Props {
         payment_method: string;
     };
     khqrPayload?: string | null;
+    paywayPayload?: {
+        merchant_reference: string;
+        checkout_url: string;
+        deeplink: string;
+        qr_code_payload?: string | null;
+        qr_image_url?: string | null;
+        status: string;
+        amount: string;
+        amount_khr: number;
+    } | null;
     bankDetails: {
         bank_name: string;
         account_name: string;
@@ -44,6 +54,31 @@ const copyOrderNumber = () => {
 
 const printOrder = () => {
     window.print();
+};
+
+const isSimulating = ref(false);
+const simulatePaywayPayment = async () => {
+    if (!props.paywayPayload?.merchant_reference) return;
+    isSimulating.value = true;
+    try {
+        const response = await fetch(`/checkout/payment/payway/${props.paywayPayload.merchant_reference}/simulate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
+            },
+        });
+        const data = await response.json();
+        if (data.status === '00' || data.message) {
+            window.location.reload();
+        }
+    } catch (e) {
+        console.error('Failed to simulate payment:', e);
+    } finally {
+        isSimulating.value = false;
+    }
 };
 </script>
 
@@ -138,6 +173,121 @@ const printOrder = () => {
                         <div><span class="text-[#86868B]">USD Account:</span> {{ bankDetails.account_usd }}</div>
                         <div><span class="text-[#86868B]">KHR Account:</span> {{ bankDetails.account_khr }}</div>
                         <div><span class="text-[#86868B]">Reference:</span> {{ order.order_number }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABA PayWay Card -->
+            <div
+                v-else-if="order.payment_method === 'aba_payway_sandbox'"
+                class="bg-white rounded-3xl p-8 border border-[#E5E5EA] shadow-sm mb-8 space-y-6"
+            >
+                <div class="flex items-center justify-between pb-4 border-b border-[#F5F5F7]">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-2xl bg-[#005a9c] flex items-center justify-center text-white font-black text-sm tracking-tight shadow-sm">
+                            ABA
+                        </div>
+                        <div>
+                            <h2 class="text-sm font-bold uppercase tracking-wider text-[#111111] flex items-center gap-2">
+                                <span>ABA PayWay</span>
+                                <span class="text-[10px] bg-[#E0F2FE] text-[#0284C7] font-semibold px-2 py-0.5 rounded-full uppercase">Official</span>
+                            </h2>
+                            <p class="text-[11px] text-[#86868B]">ABA Mobile & International Credit/Debit Cards</p>
+                        </div>
+                    </div>
+                    <span
+                        v-if="order.payment_status === 'paid'"
+                        class="inline-flex items-center gap-1.5 px-3 py-1 bg-[#DCFCE7] text-[#16A34A] rounded-full text-xs font-bold"
+                    >
+                        <CheckCircle2 class="w-3.5 h-3.5" />
+                        Paid
+                    </span>
+                    <span
+                        v-else
+                        class="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FEF3C7] text-[#D97706] rounded-full text-xs font-bold"
+                    >
+                        Pending Payment
+                    </span>
+                </div>
+
+                <!-- If Pending Payment -->
+                <div v-if="order.payment_status === 'pending'" class="flex flex-col md:flex-row items-center gap-8">
+                    <!-- ABA QR Card -->
+                    <div class="p-6 bg-gradient-to-br from-[#005a9c] to-[#044070] text-white rounded-2xl text-center space-y-3 shadow-xl w-full sm:w-auto">
+                        <div class="text-[11px] font-black uppercase tracking-widest text-[#38BDF8]">
+                            ABA Mobile QR
+                        </div>
+                        <div class="w-48 h-48 bg-white rounded-xl mx-auto flex flex-col items-center justify-center p-3 text-center border border-[#005a9c]/20 shadow-inner">
+                            <QrCode class="w-32 h-32 text-[#005a9c]" />
+                            <span class="text-[9px] font-mono text-[#86868B] truncate max-w-full">
+                                {{ paywayPayload?.merchant_reference }}
+                            </span>
+                        </div>
+                        <div class="text-xs font-bold text-white">
+                            ${{ order.total }} (៛{{ order.total_khr.toLocaleString() }})
+                        </div>
+                    </div>
+
+                    <!-- Instructions and Buttons -->
+                    <div class="flex-1 space-y-4 text-xs text-[#1D1D1F] leading-relaxed">
+                        <p class="font-bold text-sm text-[#111111]">
+                            How to complete payment with ABA PayWay:
+                        </p>
+                        <ol class="list-decimal pl-4 space-y-1.5 text-[#86868B]">
+                            <li>Click <strong>Open PayWay Checkout</strong> to pay via Visa, Mastercard, or UnionPay cards.</li>
+                            <li>Or open <strong>ABA Mobile</strong>, tap <em>Scan QR</em>, and scan the QR code to confirm.</li>
+                            <li>For testing in sandbox, click the instant simulator button below.</li>
+                        </ol>
+
+                        <div class="p-3 bg-[#F5F5F7] rounded-xl font-mono text-[11px] text-[#555] space-y-1">
+                            <div><span class="text-[#86868B]">Transaction ID:</span> {{ paywayPayload?.merchant_reference }}</div>
+                            <div><span class="text-[#86868B]">Merchant:</span> D STORE CO., LTD.</div>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-3 pt-2">
+                            <a
+                                v-if="paywayPayload?.checkout_url"
+                                :href="paywayPayload.checkout_url"
+                                class="inline-flex"
+                            >
+                                <Button variant="primary" size="md">
+                                    <CreditCard class="w-4 h-4 mr-1.5" />
+                                    Open PayWay Checkout
+                                </Button>
+                            </a>
+                            <a
+                                v-if="paywayPayload?.deeplink"
+                                :href="paywayPayload.deeplink"
+                                class="inline-flex"
+                            >
+                                <Button variant="secondary" size="md">
+                                    <ExternalLink class="w-4 h-4 mr-1.5" />
+                                    Open ABA Mobile
+                                </Button>
+                            </a>
+                            <Button
+                                variant="outline"
+                                size="md"
+                                :disabled="isSimulating"
+                                @click="simulatePaywayPayment"
+                                class="border-dashed border-emerald-500 text-emerald-700 hover:bg-emerald-50 cursor-pointer"
+                            >
+                                <Zap class="w-4 h-4 mr-1.5 text-amber-500" />
+                                <span v-if="isSimulating">Approving...</span>
+                                <span v-else>Simulate Payment Success (Sandbox)</span>
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- If Already Paid -->
+                <div v-else class="p-6 bg-[#F0FDF4] border border-[#BBF7D0] rounded-2xl flex items-center gap-4">
+                    <CheckCircle2 class="w-8 h-8 text-[#16A34A] shrink-0" />
+                    <div class="space-y-0.5">
+                        <h3 class="text-sm font-bold text-[#166534]">Payment Approved via ABA PayWay</h3>
+                        <p class="text-xs text-[#15803D]">
+                            Transaction Reference: <span class="font-mono font-bold">{{ paywayPayload?.merchant_reference }}</span>. Your transaction has been verified and settled.
+                        </p>
                     </div>
                 </div>
             </div>

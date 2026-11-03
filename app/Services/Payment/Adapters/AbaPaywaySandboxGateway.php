@@ -23,17 +23,23 @@ class AbaPaywaySandboxGateway implements PaymentGatewayInterface
 
     public function initiatePayment(Order $order, array $options = []): PaymentInitiationResult
     {
-        $merchantRef = 'ABAPW-' . $order->order_number . '-' . Str::random(4);
+        $payment = Payment::where('order_id', $order->id)
+            ->where('gateway', 'aba_payway_sandbox')
+            ->first();
 
-        $payment = Payment::firstOrCreate(
-            ['order_id' => $order->id, 'gateway' => 'aba_payway_sandbox'],
-            [
+        if (!$payment) {
+            $merchantRef = 'ABAPW-' . $order->order_number . '-' . Str::upper(Str::random(4));
+            $payment = Payment::create([
+                'order_id' => $order->id,
+                'gateway' => 'aba_payway_sandbox',
                 'currency' => $order->base_currency,
                 'amount' => $order->grand_total,
                 'status' => 'pending',
                 'merchant_reference' => $merchantRef,
-            ]
-        );
+            ]);
+        } else {
+            $merchantRef = $payment->merchant_reference;
+        }
 
         $reqTime = date('YmdHis');
         $merchantId = config('services.aba_payway.merchant_id', 'ec432100');
@@ -45,12 +51,17 @@ class AbaPaywaySandboxGateway implements PaymentGatewayInterface
         $hash = base64_encode(hash_hmac('sha512', $hashString, $apiKey, true));
 
         $sandboxCheckoutUrl = route('payway.sandbox.checkout', ['reference' => $merchantRef]);
+        $deeplink = "abamobilebank://payway?tran_id={$merchantRef}";
+        $qrString = "https://payway.ababank.com/pay/{$merchantRef}?amount={$amount}&currency={$order->base_currency}";
+        $qrImageUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" . urlencode($qrString);
 
         return new PaymentInitiationResult(
             isSuccess: true,
             gateway: 'aba_payway_sandbox',
             paymentUrl: $sandboxCheckoutUrl,
-            deeplink: "abamobilebank://payway?tran_id={$merchantRef}",
+            qrCodePayload: $qrString,
+            qrImageUrl: $qrImageUrl,
+            deeplink: $deeplink,
             instructions: "Pay securely with ABA Mobile, Visa, Mastercard, or UnionPay via ABA PayWay.",
             rawResponse: [
                 'merchant_id' => $merchantId,

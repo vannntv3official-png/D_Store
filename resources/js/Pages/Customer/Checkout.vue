@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref, computed } from 'vue';
+import { reactive, ref, computed, watch, onMounted } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import CustomerLayout from '@/Layouts/CustomerLayout.vue';
 import Button from '@/Components/Button.vue';
@@ -67,6 +67,22 @@ const form = reactive({
     idempotency_key: props.initialIdempotencyKey,
 });
 
+const generateIdempotencyKey = () => {
+    return typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : 'idemp-' + Date.now() + '-' + Math.random().toString(36).substring(2, 9);
+};
+
+onMounted(() => {
+    if (!form.idempotency_key) {
+        form.idempotency_key = generateIdempotencyKey();
+    }
+});
+
+watch(() => form.payment_method, () => {
+    form.idempotency_key = generateIdempotencyKey();
+});
+
 const isPlacingOrder = ref(false);
 const errors = ref<Record<string, string>>({});
 
@@ -110,6 +126,7 @@ const submitOrder = () => {
         onError: (err) => {
             errors.value = err;
             isPlacingOrder.value = false;
+            form.idempotency_key = generateIdempotencyKey();
         },
         onFinish: () => {
             isPlacingOrder.value = false;

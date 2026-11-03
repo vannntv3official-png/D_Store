@@ -12,6 +12,7 @@ use App\Models\ShippingMethod;
 use App\Models\ShippingZone;
 use App\Services\Cart\CartService;
 use App\Services\Checkout\CheckoutService;
+use App\Services\Checkout\IdempotencyMismatchException;
 use App\Services\Pricing\Money;
 use App\Services\Pricing\PricingPipelineService;
 use Illuminate\Http\RedirectResponse;
@@ -134,23 +135,44 @@ class CheckoutController extends Controller
             $addressLine .= ', ' . $validated['commune'];
         }
 
-        $result = $this->checkoutService->processCheckout(
-            cart: $cart,
-            shippingAddressData: [
-                'contact_name' => $validated['recipient_name'],
-                'contact_phone' => $validated['phone'],
-                'email' => $validated['email'] ?? null,
-                'province_name' => $validated['province'],
-                'district_name' => $validated['district'],
-                'address_line' => $addressLine,
-            ],
-            paymentMethod: $validated['payment_method'],
-            idempotencyKey: $validated['idempotency_key'],
-            user: $user,
-            deliveryNotes: $validated['delivery_notes'] ?? null,
-        );
+        $shippingAddressData = [
+            'contact_name' => $validated['recipient_name'],
+            'contact_phone' => $validated['phone'],
+            'email' => $validated['email'] ?? null,
+            'province_name' => $validated['province'],
+            'district_name' => $validated['district'],
+            'address_line' => $addressLine,
+        ];
+
+        try {
+            $result = $this->checkoutService->processCheckout(
+                cart: $cart,
+                shippingAddressData: $shippingAddressData,
+                paymentMethod: $validated['payment_method'],
+                idempotencyKey: $validated['idempotency_key'],
+                user: $user,
+                deliveryNotes: $validated['delivery_notes'] ?? null,
+            );
+        } catch (IdempotencyMismatchException $e) {
+            // Client provided a stale idempotency key from a prior attempt with a changed payload.
+            // Transparently generate a fresh key and proceed so checkout is never aborted.
+            $result = $this->checkoutService->processCheckout(
+                cart: $cart,
+                shippingAddressData: $shippingAddressData,
+                paymentMethod: $validated['payment_method'],
+                idempotencyKey: Str::uuid()->toString(),
+                user: $user,
+                deliveryNotes: $validated['delivery_notes'] ?? null,
+            );
+        }
 
         $order = $result['order'];
+
+        if ($validated['payment_method'] === 'aba_payway_sandbox' && !empty($result['payment_initiation']['paymentUrl'])) {
+            return redirect($result['payment_initiation']['paymentUrl'])
+                ->with('success', 'Order created successfully! Please complete payment via ABA PayWay.')
+                ->with('guest_token', $order->guest_token);
+        }
 
         return redirect()->route('orders.confirmed', ['orderNumber' => $order->order_number])
             ->with('success', 'Order created successfully!')

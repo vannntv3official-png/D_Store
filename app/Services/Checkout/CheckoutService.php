@@ -47,13 +47,14 @@ class CheckoutService
             ->where('idempotency_key', $idempotencyKey)
             ->first();
 
+        if ($idempotency && (!$idempotency->order_id || !$idempotency->order)) {
+            // Clean up stale or orphaned idempotency record
+            $idempotency->delete();
+            $idempotency = null;
+        }
+
         if ($idempotency && $idempotency->order_id && $idempotency->order) {
-            // Recompute request hash for payload mismatch check
-            $canonicalPayload = json_encode([
-                'address' => $shippingAddressData,
-                'payment_method' => $paymentMethod,
-            ]);
-            $requestHash = hash('sha256', $canonicalPayload);
+            $requestHash = $this->computeRequestHash($shippingAddressData, $paymentMethod);
 
             if ($idempotency->request_hash !== $requestHash) {
                 throw new IdempotencyMismatchException('Idempotency key reused with mismatched payload.');
@@ -72,11 +73,7 @@ class CheckoutService
             throw new Exception('Cannot checkout with an empty cart.');
         }
 
-        $canonicalPayload = json_encode([
-            'address' => $shippingAddressData,
-            'payment_method' => $paymentMethod,
-        ]);
-        $requestHash = hash('sha256', $canonicalPayload);
+        $requestHash = $this->computeRequestHash($shippingAddressData, $paymentMethod);
 
         // Perform transactional order creation & atomic reservation
         $order = DB::transaction(function () use (
@@ -228,5 +225,28 @@ class CheckoutService
             'payment_initiation' => $initiation->toArray(),
             'is_replay' => false,
         ];
+    }
+
+    protected function computeRequestHash(array $shippingAddressData, string $paymentMethod): string
+    {
+        $payload = [
+            'address' => $this->normalizeArray($shippingAddressData),
+            'payment_method' => $paymentMethod,
+        ];
+        ksort($payload);
+
+        return hash('sha256', (string) json_encode($payload));
+    }
+
+    protected function normalizeArray(array $array): array
+    {
+        foreach ($array as $key => $value) {
+            if (is_array($value)) {
+                $array[$key] = $this->normalizeArray($value);
+            }
+        }
+        ksort($array);
+
+        return $array;
     }
 }

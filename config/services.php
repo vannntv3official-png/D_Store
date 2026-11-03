@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'aba_payway' => [
+        'merchant_id' => env('ABA_PAYWAY_MERCHANT_ID', 'ec432100'),
+        'api_key' => env('ABA_PAYWAY_API_KEY', 'sandbox_aba_payway_key'),
+        'api_url' => env('ABA_PAYWAY_API_URL', 'https://checkout-sandbox.payway.com.kh/api/payment-gateway/v1/payments/purchase'),
+    ],
+
 ];

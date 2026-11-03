@@ -7,11 +7,18 @@ namespace App\Http\Controllers\Customer;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\PaymentTransaction;
+use App\Models\PaymentWebhookEvent;
 use App\Models\Setting;
+use App\Services\Order\OrderStateMachineService;
+use App\Services\Payment\Adapters\AbaPaywaySandboxGateway;
 use App\Services\Payment\Adapters\KhqrSandboxGateway;
 use App\Services\Pricing\Money;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -42,7 +49,9 @@ class OrderTrackingController extends Controller
 
         // If KHQR, generate EMVCo QR code payload for display
         $khqrPayload = null;
+        $paywayPayload = null;
         $latestPayment = $order->payments->last();
+
         if ($latestPayment && $latestPayment->gateway === 'khqr_sandbox' && $latestPayment->status === 'pending') {
             $gateway = new KhqrSandboxGateway();
             $initResult = $gateway->initiatePayment($order, [
@@ -50,6 +59,21 @@ class OrderTrackingController extends Controller
                 'store_name' => Setting::get('store_name', 'D STORE CAMBODIA'),
             ]);
             $khqrPayload = $initResult->qrCodePayload ?? null;
+        }
+
+        if ($latestPayment && $latestPayment->gateway === 'aba_payway_sandbox') {
+            $paywayGateway = new AbaPaywaySandboxGateway();
+            $initResult = $paywayGateway->initiatePayment($order);
+            $paywayPayload = [
+                'merchant_reference' => $latestPayment->merchant_reference,
+                'checkout_url' => route('payway.sandbox.checkout', ['reference' => $latestPayment->merchant_reference]),
+                'deeplink' => $initResult->deeplink,
+                'qr_code_payload' => $initResult->qrCodePayload,
+                'qr_image_url' => $initResult->qrImageUrl,
+                'status' => $latestPayment->status,
+                'amount' => Money::format($order->grand_total),
+                'amount_khr' => Money::toKhr($order->grand_total, $rate),
+            ];
         }
 
         // Bank transfer details
@@ -85,6 +109,7 @@ class OrderTrackingController extends Controller
                 'payment_method' => $latestPayment?->gateway ?? 'cod',
             ],
             'khqrPayload' => $khqrPayload,
+            'paywayPayload' => $paywayPayload,
             'bankDetails' => $bankDetails,
         ]);
     }
@@ -190,12 +215,129 @@ class OrderTrackingController extends Controller
         ]);
     }
 
-    public function paywaySandboxCheckout(Request $request, string $reference): RedirectResponse
+    public function paywaySandboxCheckout(Request $request, string $reference): Response|RedirectResponse
     {
-        $payment = Payment::where('merchant_reference', $reference)->firstOrFail();
-        return redirect()->route('orders.confirmed', [
-            'orderNumber' => $payment->order->order_number,
-            'token' => $payment->order->guest_token,
+        $rate = (int) Setting::get('exchange_rate_khr_per_usd', 4100);
+
+        $payment = Payment::where('merchant_reference', $reference)
+            ->with(['order.items.variant.product.images', 'order.shippingAddress'])
+            ->firstOrFail();
+
+        $order = $payment->order;
+
+        // If payment is already paid, redirect straight to confirmed page
+        if ($payment->status === 'paid' || $order->payment_status === 'paid') {
+            return redirect()->route('orders.confirmed', [
+                'orderNumber' => $order->order_number,
+                'token' => $order->guest_token,
+            ]);
+        }
+
+        $gateway = new AbaPaywaySandboxGateway();
+        $initResult = $gateway->initiatePayment($order);
+
+        return Inertia::render('Customer/PayWayCheckout', [
+            'reference' => $payment->merchant_reference,
+            'order' => [
+                'order_number' => $order->order_number,
+                'guest_token' => $order->guest_token,
+                'grand_total' => Money::format($order->grand_total),
+                'grand_total_khr' => Money::toKhr($order->grand_total, $rate),
+                'currency' => $order->base_currency,
+                'customer_name' => $order->customer_name,
+                'customer_phone' => $order->customer_phone,
+                'items' => $order->items->map(fn ($item) => [
+                    'name_en' => $item->product_name_snapshot['en'] ?? (is_array($item->product_name_snapshot) ? reset($item->product_name_snapshot) : (string) $item->product_name_snapshot),
+                    'quantity' => $item->quantity,
+                    'unit_price' => Money::format($item->unit_price),
+                    'subtotal' => Money::format($item->subtotal),
+                ]),
+            ],
+            'payway' => [
+                'merchant_id' => config('services.aba_payway.merchant_id', 'ec432100'),
+                'merchant_name' => Setting::get('store_name', 'D STORE CO., LTD.'),
+                'tran_id' => $payment->merchant_reference,
+                'deeplink' => $initResult->deeplink,
+                'qr_code_payload' => $initResult->qrCodePayload,
+                'qr_image_url' => $initResult->qrImageUrl,
+                'hash' => $initResult->rawResponse['hash'] ?? null,
+                'req_time' => $initResult->rawResponse['req_time'] ?? null,
+            ],
+            'returnUrl' => route('orders.confirmed', [
+                'orderNumber' => $order->order_number,
+                'token' => $order->guest_token,
+            ]),
         ]);
+    }
+
+    public function paywaySandboxSimulate(
+        Request $request,
+        string $reference,
+        OrderStateMachineService $orderStateMachine
+    ): JsonResponse|RedirectResponse {
+        $payment = Payment::where('merchant_reference', $reference)
+            ->with('order')
+            ->firstOrFail();
+
+        $order = $payment->order;
+        $apv = 'APV-' . strtoupper(Str::random(8));
+
+        DB::transaction(function () use ($payment, $order, $apv, $orderStateMachine) {
+            $payment->update([
+                'status' => 'paid',
+            ]);
+
+            PaymentTransaction::create([
+                'payment_id' => $payment->id,
+                'type' => 'charge',
+                'amount' => $payment->amount,
+                'status' => 'success',
+                'gateway_transaction_id' => $apv,
+                'gateway_response' => [
+                    'simulated' => true,
+                    'apv' => $apv,
+                    'tran_id' => $payment->merchant_reference,
+                    'status' => 0,
+                    'timestamp' => now()->toIso8601String(),
+                ],
+            ]);
+
+            PaymentWebhookEvent::create([
+                'gateway' => 'aba_payway_sandbox',
+                'event_id' => 'sim_payway_' . $payment->merchant_reference . '_' . now()->timestamp,
+                'payload' => [
+                    'tran_id' => $payment->merchant_reference,
+                    'status' => 0,
+                    'apv' => $apv,
+                    'amount' => (string) $payment->amount,
+                ],
+                'status' => 'processed',
+                'processed_at' => now(),
+            ]);
+
+            $orderStateMachine->transitionPayment(
+                order: $order,
+                toStatus: 'paid',
+                actor: null,
+                reason: "Payment verified via ABA PayWay Sandbox Simulation (APV: {$apv})"
+            );
+        });
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'status' => '00',
+                'message' => 'Payment approved successfully.',
+                'apv' => $apv,
+                'redirect' => route('orders.confirmed', [
+                    'orderNumber' => $order->order_number,
+                    'token' => $order->guest_token,
+                ]),
+            ]);
+        }
+
+        return redirect()->route('orders.confirmed', [
+            'orderNumber' => $order->order_number,
+            'token' => $order->guest_token,
+        ])->with('success', 'ABA PayWay payment approved successfully!');
     }
 }
