@@ -51,7 +51,7 @@ const sizeClasses = computed(() => {
     <button
         :type="type"
         :disabled="disabled || loading"
-        class="inline-flex items-center justify-center transition-all duration-200 select-none cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-40 disabled:cursor-not-allowed"
+        class="inline-flex items-center justify-center transition-[transform,background-color,border-color,color,box-shadow,opacity] duration-150 ease-out active:scale-[0.97] touch-manipulation select-none cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
         :class="[variantClasses, sizeClasses]"
     >
         <svg

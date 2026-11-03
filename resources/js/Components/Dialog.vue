@@ -75,14 +75,14 @@ const maxWidthClasses = computed(() => ({
 
                 <!-- Modal Dialog -->
                 <div
-                    class="relative bg-white rounded-3xl overflow-hidden shadow-2xl transform transition-all sm:w-full border border-[#E5E5EA] p-6 sm:p-8"
+                    class="d-dialog-surface relative bg-white rounded-3xl overflow-hidden shadow-2xl sm:w-full border border-[#E5E5EA] p-6 sm:p-8"
                     :class="[maxWidthClasses]"
                     role="dialog"
                     aria-modal="true"
                 >
                     <button
                         type="button"
-                        class="absolute top-5 right-5 text-[#86868B] hover:text-[#111111] transition-colors p-1 rounded-full focus:outline-none"
+                        class="absolute top-5 right-5 text-[#86868B] hover:text-[#111111] transition-colors p-1.5 rounded-full focus:outline-none touch-manipulation cursor-pointer active:scale-95"
                         @click="close"
                         aria-label="Close dialog"
                     >

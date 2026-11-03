@@ -12,6 +12,7 @@ interface Props {
     required?: boolean;
     disabled?: boolean;
     autocomplete?: string;
+    inputmode?: 'none' | 'text' | 'decimal' | 'numeric' | 'tel' | 'search' | 'email' | 'url';
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -24,6 +25,7 @@ const props = withDefaults(defineProps<Props>(), {
     required: false,
     disabled: false,
     autocomplete: 'off',
+    inputmode: undefined,
 });
 
 const emit = defineEmits<{
@@ -58,8 +60,9 @@ const onInput = (event: Event) => {
                 :required="required"
                 :disabled="disabled"
                 :autocomplete="autocomplete"
+                :inputmode="inputmode"
                 @input="onInput"
-                class="w-full px-4 py-3 bg-white text-[#1D1D1F] text-sm rounded-xl border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#111111] focus:border-[#111111] disabled:bg-[#F5F5F7] disabled:text-[#86868B] disabled:cursor-not-allowed placeholder-[#86868B]/60"
+                class="w-full px-4 py-3 bg-white text-[#1D1D1F] text-base sm:text-sm rounded-xl border transition-[border-color,box-shadow] duration-150 focus:outline-none focus:ring-2 focus:ring-[#111111] focus:border-[#111111] disabled:bg-[#F5F5F7] disabled:text-[#86868B] disabled:cursor-not-allowed placeholder-[#86868B]/60"
                 :class="[
                     hasError
                         ? 'border-[#DC2626] focus:ring-[#DC2626] focus:border-[#DC2626]'

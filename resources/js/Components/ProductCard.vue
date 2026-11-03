@@ -40,7 +40,7 @@ const addToCart = (e: Event) => {
 </script>
 
 <template>
-    <div class="group relative flex flex-col bg-white rounded-2xl border border-[#E5E5EA] overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+    <div class="group relative flex flex-col bg-white rounded-2xl border border-[#E5E5EA] overflow-hidden transition-[transform,box-shadow] duration-200 ease-out [@media(hover:hover)]:hover:-translate-y-1 [@media(hover:hover)]:hover:shadow-xl active:scale-[0.99] touch-manipulation">
         <!-- Image Container -->
         <Link :href="`/products/${product.slug}`" class="relative aspect-square w-full overflow-hidden bg-[#F5F5F7] p-6 flex items-center justify-center">
             <img
@@ -111,7 +111,7 @@ const addToCart = (e: Event) => {
                 <button
                     type="button"
                     @click="addToCart"
-                    class="p-2.5 rounded-full bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#111111] hover:text-white active:scale-95 transition-all focus:outline-none cursor-pointer"
+                    class="p-2.5 rounded-full bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#111111] hover:text-white active:scale-95 transition-[transform,background-color,color] duration-150 ease-out focus:outline-none cursor-pointer touch-manipulation select-none"
                     :aria-label="t('product.add_to_cart')"
                 >
                     <ShoppingBag class="w-4 h-4" />

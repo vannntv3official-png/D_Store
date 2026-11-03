@@ -88,12 +88,12 @@ const logout = () => {
         </div>
 
         <!-- Sticky Luxury Header -->
-        <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-[#E5E5EA] transition-all">
+        <header class="sticky top-0 z-40 bg-white/85 backdrop-blur-xl saturate-180 border-b border-black/5 transition-all pt-[env(safe-area-inset-top)]">
             <div class="max-w-7xl mx-auto px-4 sm:px-8 h-18 flex items-center justify-between gap-4">
                 <!-- Mobile Menu Button -->
                 <button
                     type="button"
-                    class="lg:hidden p-2 text-[#1D1D1F] hover:text-black focus:outline-none"
+                    class="lg:hidden p-2 text-[#1D1D1F] hover:text-black focus:outline-none touch-manipulation cursor-pointer active:scale-95"
                     @click="isMobileMenuOpen = !isMobileMenuOpen"
                 >
                     <Menu v-if="!isMobileMenuOpen" class="w-6 h-6" />
@@ -151,7 +151,7 @@ const logout = () => {
                     <Link
                         v-if="auth.user"
                         href="/account/wishlist"
-                        class="p-2 text-[#1D1D1F] hover:text-black hover:bg-[#F5F5F7] rounded-full transition-colors relative"
+                        class="p-2 text-[#1D1D1F] hover:text-black hover:bg-[#F5F5F7] rounded-full transition-[transform,background-color,color] duration-150 active:scale-95 touch-manipulation relative"
                         :aria-label="t('nav.wishlist')"
                     >
                         <Heart class="w-5 h-5" />
@@ -160,7 +160,7 @@ const logout = () => {
                     <!-- Cart Bag -->
                     <Link
                         href="/cart"
-                        class="p-2 text-[#1D1D1F] hover:text-black hover:bg-[#F5F5F7] rounded-full transition-colors relative"
+                        class="p-2 text-[#1D1D1F] hover:text-black hover:bg-[#F5F5F7] rounded-full transition-[transform,background-color,color] duration-150 active:scale-95 touch-manipulation relative"
                         :aria-label="t('nav.cart')"
                     >
                         <ShoppingBag class="w-5 h-5" />
@@ -177,7 +177,7 @@ const logout = () => {
                         <button
                             type="button"
                             @click="isUserDropdownOpen = !isUserDropdownOpen"
-                            class="flex items-center gap-1.5 p-2 text-[#1D1D1F] hover:text-black hover:bg-[#F5F5F7] rounded-full transition-colors cursor-pointer"
+                            class="flex items-center gap-1.5 p-2 text-[#1D1D1F] hover:text-black hover:bg-[#F5F5F7] rounded-full transition-[transform,background-color,color] duration-150 active:scale-95 touch-manipulation cursor-pointer"
                         >
                             <UserIcon class="w-5 h-5" />
                             <span v-if="auth.user" class="text-xs font-semibold max-w-[80px] truncate hidden sm:inline">
@@ -185,11 +185,11 @@ const logout = () => {
                             </span>
                         </button>
 
-                        <!-- Dropdown Menu -->
+                        <!-- Dropdown Menu (Origin-aware entrance) -->
                         <div
                             v-if="isUserDropdownOpen"
                             @click="isUserDropdownOpen = false"
-                            class="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-[#E5E5EA] py-2 z-50 animate-in fade-in slide-in-from-top-2"
+                            class="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-[#E5E5EA] py-2 z-50 origin-top-right transform transition-[transform,opacity] duration-150 ease-out animate-in fade-in zoom-in-95"
                         >
                             <template v-if="auth.user">
                                 <div class="px-4 py-2 border-b border-[#F5F5F7]">
