@@ -49,13 +49,15 @@ class Setting extends Model
         static::$runtimeCache = null;
         try {
             Cache::forget('dstore_all_settings');
+            Cache::forget('dstore_all_settings_data');
         } catch (\Throwable) {
             // Ignore during early migrations / bootstrap
         }
     }
 
     /**
-     * Retrieve all settings mapped by key, cached for 1 hour.
+     * Retrieve all settings mapped by key as primitive arrays (no Eloquent objects in cache), cached for 1 hour.
+     * @return array<string, array{value: mixed, type: string}>
      */
     protected static function allSettings(): array
     {
@@ -64,14 +66,35 @@ class Setting extends Model
         }
 
         try {
-            $settings = Cache::remember('dstore_all_settings', 3600, function () {
-                return static::all()->keyBy('key');
+            $cached = Cache::remember('dstore_all_settings_data', 3600, function () {
+                return static::query()
+                    ->get(['key', 'value', 'type'])
+                    ->mapWithKeys(fn ($item) => [
+                        $item->key => [
+                            'value' => $item->value,
+                            'type' => $item->type ?? 'string',
+                        ],
+                    ])
+                    ->all();
             });
+
+            static::$runtimeCache = is_array($cached) ? $cached : [];
         } catch (\Throwable) {
-            $settings = static::all()->keyBy('key');
+            try {
+                static::$runtimeCache = static::query()
+                    ->get(['key', 'value', 'type'])
+                    ->mapWithKeys(fn ($item) => [
+                        $item->key => [
+                            'value' => $item->value,
+                            'type' => $item->type ?? 'string',
+                        ],
+                    ])
+                    ->all();
+            } catch (\Throwable) {
+                static::$runtimeCache = [];
+            }
         }
 
-        static::$runtimeCache = $settings ? $settings->all() : [];
         return static::$runtimeCache;
     }
 
@@ -84,11 +107,14 @@ class Setting extends Model
             return $default;
         }
 
-        return match ($setting->type) {
-            'json' => is_array($setting->value) ? $setting->value : (json_decode($setting->value, true) ?: $default),
-            'boolean' => filter_var($setting->value, FILTER_VALIDATE_BOOLEAN),
-            'number' => is_numeric($setting->value) ? $setting->value + 0 : $default,
-            default => $setting->value,
+        $val = $setting['value'] ?? null;
+        $type = $setting['type'] ?? 'string';
+
+        return match ($type) {
+            'json' => is_array($val) ? $val : (json_decode((string) $val, true) ?: $default),
+            'boolean' => filter_var($val, FILTER_VALIDATE_BOOLEAN),
+            'number' => is_numeric($val) ? $val + 0 : $default,
+            default => $val,
         };
     }
 
