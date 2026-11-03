@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="dgrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1F1F24"/>
+      <stop offset="100%" stop-color="#0A0A0C"/>
+    </linearGradient>
+  </defs>
+  <!-- Luxury Squircle -->
+  <rect width="128" height="128" rx="28" fill="url(#dgrad)"/>
+  <rect x="1" y="1" width="126" height="126" rx="27" fill="none" stroke="#2D2D34" stroke-width="2"/>
+  <!-- D Symbol -->
+  <path d="M38 28 H66 C83 28 95 43 95 64 C95 85 83 100 66 100 H38 Z M54 44 V84 H65 C74 84 80 76 80 64 C80 52 74 44 65 44 Z" fill="#FFFFFF" fill-rule="evenodd"/>
+</svg>
