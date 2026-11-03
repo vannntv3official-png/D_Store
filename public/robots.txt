@@ -1,0 +1,8 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /account/
+Disallow: /checkout
+Disallow: /cart
+Disallow: /webhook/
+
+Sitemap: https://dstore.com.kh/sitemap.xml

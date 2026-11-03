@@ -1,0 +1,51 @@
+@import 'tailwindcss';
+
+@source '../views/**/*.blade.php';
+@source '../js/**/*.vue';
+@source '../js/**/*.ts';
+
+@theme {
+    --font-sans: 'Inter', 'Kantumruy Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-khmer: 'Kantumruy Pro', 'Inter', sans-serif;
+
+    --color-d-black: #111111;
+    --color-d-dark: #1D1D1F;
+    --color-d-muted: #86868B;
+    --color-d-bg: #F5F5F7;
+    --color-d-card: #FFFFFF;
+    --color-d-border: #E5E5EA;
+    --color-d-blue: #0071E3;
+    --color-d-blue-hover: #0077ED;
+    --color-d-success: #16A34A;
+    --color-d-danger: #DC2626;
+
+    --radius-card: 16px;
+}
+
+/* Custom Base Styles for Apple-Minimalist Polish */
+html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    background-color: var(--color-d-bg);
+    color: var(--color-d-dark);
+}
+
+/* Ensure Khmer script typography never breaks ligatures */
+:lang(km), [lang="km"] {
+    font-family: 'Kantumruy Pro', sans-serif;
+    letter-spacing: normal !important;
+    line-height: 1.7;
+}
+
+/* Luxury card shadow */
+.d-shadow-subtle {
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
+}
+
+.d-shadow-float {
+    box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.08), 0 4px 12px -2px rgba(0, 0, 0, 0.03);
+}
