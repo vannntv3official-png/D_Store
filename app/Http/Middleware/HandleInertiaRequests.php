@@ -8,6 +8,7 @@ use App\Models\Setting;
 use App\Services\Cart\CartService;
 use App\Services\Pricing\Money;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -36,30 +37,36 @@ class HandleInertiaRequests extends Middleware
         $currency = $request->session()->get('currency', 'USD');
         $exchangeRate = (int) Setting::get('exchange_rate_khr_per_usd', 4100);
 
-        // Fetch translations for current locale
-        $translationPath = base_path("lang/{$locale}.json");
-        $translations = file_exists($translationPath)
-            ? json_decode(file_get_contents($translationPath), true) ?? []
-            : [];
+        // Fast static translation cache in worker RAM
+        static $translationCache = [];
+        if (!isset($translationCache[$locale])) {
+            $translationPath = base_path("lang/{$locale}.json");
+            $translationCache[$locale] = file_exists($translationPath)
+                ? (json_decode((string) file_get_contents($translationPath), true) ?? [])
+                : [];
+        }
+        $translations = $translationCache[$locale];
 
-        // Cart summary
+        // Cart summary (only needed for customer/public facing pages)
         $cartSummary = ['item_count' => 0, 'subtotal_usd' => '0.00', 'subtotal_khr' => 0];
-        try {
-            /** @var CartService $cartService */
-            $cartService = app(CartService::class);
-            $cart = $cartService->getOrCreateCart($request->user(), $request->cookie('dstore_cart_token'));
-            $itemCount = $cart->items->sum('quantity');
-            $subtotal = Money::zero();
-            foreach ($cart->items as $item) {
-                $subtotal = $subtotal->add(Money::of($item->unit_price)->multiply($item->quantity));
+        if (!$request->is('admin*')) {
+            try {
+                /** @var CartService $cartService */
+                $cartService = app(CartService::class);
+                $cart = $cartService->getOrCreateCart($request->user(), $request->cookie('dstore_cart_token'));
+                $itemCount = $cart->items->sum('quantity');
+                $subtotal = Money::zero();
+                foreach ($cart->items as $item) {
+                    $subtotal = $subtotal->add(Money::of($item->unit_price)->multiply($item->quantity));
+                }
+                $cartSummary = [
+                    'item_count' => $itemCount,
+                    'subtotal_usd' => Money::format($subtotal),
+                    'subtotal_khr' => Money::toKhr($subtotal, $exchangeRate),
+                ];
+            } catch (\Throwable $e) {
+                // Cart loading should never break global page rendering
             }
-            $cartSummary = [
-                'item_count' => $itemCount,
-                'subtotal_usd' => Money::format($subtotal),
-                'subtotal_khr' => Money::toKhr($subtotal, $exchangeRate),
-            ];
-        } catch (\Throwable $e) {
-            // Cart loading should never break global page rendering
         }
 
         $user = $request->user();
@@ -67,15 +74,17 @@ class HandleInertiaRequests extends Middleware
         $adminBadges = null;
         if ($request->is('admin*') && $user && $user->roles->isNotEmpty()) {
             try {
-                $adminBadges = [
-                    'pending_orders' => \App\Models\Order::whereIn('fulfillment_status', [
-                        \App\Models\Order::FULFILLMENT_PENDING,
-                        \App\Models\Order::FULFILLMENT_CONFIRMED,
-                        \App\Models\Order::FULFILLMENT_PROCESSING,
-                    ])->count(),
-                    'low_stock' => \App\Models\Inventory::whereRaw('(on_hand_quantity - reserved_quantity) <= 5')->count(),
-                    'pending_refunds' => \App\Models\Refund::where('status', 'requested')->count(),
-                ];
+                $adminBadges = Cache::remember('admin_nav_badges', 15, function () {
+                    return [
+                        'pending_orders' => \App\Models\Order::whereIn('fulfillment_status', [
+                            \App\Models\Order::FULFILLMENT_PENDING,
+                            \App\Models\Order::FULFILLMENT_CONFIRMED,
+                            \App\Models\Order::FULFILLMENT_PROCESSING,
+                        ])->count(),
+                        'low_stock' => \App\Models\Inventory::whereRaw('(on_hand_quantity - reserved_quantity) <= 5')->count(),
+                        'pending_refunds' => \App\Models\Refund::where('status', 'requested')->count(),
+                    ];
+                });
             } catch (\Throwable $e) {
                 // Graceful fallback if database schema is initializing
                 $adminBadges = null;

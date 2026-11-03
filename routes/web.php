@@ -30,6 +30,13 @@ use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
+| Chrome DevTools Fast Ping Route (Prevents CLI Worker Blocking)
+|--------------------------------------------------------------------------
+*/
+Route::get('/.well-known/appspecific/com.chrome.devtools.json', fn () => response()->noContent());
+
+/*
+|--------------------------------------------------------------------------
 | Webhook Routes (CSRF exempt via bootstrap/app.php)
 |--------------------------------------------------------------------------
 */

@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import Button from '@/Components/Button.vue';
 import Badge from '@/Components/Badge.vue';
+import CustomDropdown from '@/Components/CustomDropdown.vue';
 import { Search, ShoppingBag, Eye, Printer } from 'lucide-vue-next';
 
 interface OrderSummary {
@@ -43,6 +44,19 @@ const props = defineProps<Props>();
 const search = ref(props.filters.q || '');
 const selectedStatus = ref(props.filters.status || '');
 const selectedPaymentStatus = ref(props.filters.payment_status || '');
+
+const statusOptions = computed(() => [
+    { value: '', label: 'All Fulfillment Statuses' },
+    ...(props.statuses || []).map((s) => ({ value: s, label: s.toUpperCase() })),
+]);
+
+const paymentStatusOptions = [
+    { value: '', label: 'All Payment States' },
+    { value: 'pending', label: 'Pending' },
+    { value: 'paid', label: 'Paid' },
+    { value: 'failed', label: 'Failed' },
+    { value: 'refunded', label: 'Refunded' },
+];
 
 const applyFilters = () => {
     router.get(
@@ -102,31 +116,24 @@ const getStatusBadgeVariant = (status: string) => {
                     />
                 </div>
 
-                <div class="w-full sm:w-48">
-                    <select
+                <div class="w-full sm:w-52">
+                    <CustomDropdown
                         v-model="selectedStatus"
+                        :options="statusOptions"
                         @change="applyFilters"
-                        class="w-full py-2 px-3 text-xs bg-[#F5F5F7] border border-transparent rounded-xl focus:bg-white focus:border-[#111111] outline-none transition-all cursor-pointer"
-                    >
-                        <option value="">All Fulfillment Statuses</option>
-                        <option v-for="st in statuses" :key="st" :value="st">
-                            {{ st.toUpperCase() }}
-                        </option>
-                    </select>
+                        align="left"
+                        min-width="w-56"
+                    />
                 </div>
 
                 <div class="w-full sm:w-48">
-                    <select
+                    <CustomDropdown
                         v-model="selectedPaymentStatus"
+                        :options="paymentStatusOptions"
                         @change="applyFilters"
-                        class="w-full py-2 px-3 text-xs bg-[#F5F5F7] border border-transparent rounded-xl focus:bg-white focus:border-[#111111] outline-none transition-all cursor-pointer"
-                    >
-                        <option value="">All Payment States</option>
-                        <option value="pending">Pending</option>
-                        <option value="paid">Paid</option>
-                        <option value="failed">Failed</option>
-                        <option value="refunded">Refunded</option>
-                    </select>
+                        align="left"
+                        min-width="w-48"
+                    />
                 </div>
 
                 <Button variant="secondary" size="sm" @click="applyFilters" class="w-full sm:w-auto">

@@ -35,12 +35,19 @@ const selectedOption = computed(() => {
     return props.options.find((opt) => opt.value === props.modelValue) ?? null;
 });
 
+const highlightedIndex = ref(-1);
+
 const toggle = () => {
     isOpen.value = !isOpen.value;
+    if (isOpen.value) {
+        highlightedIndex.value = props.options.findIndex((opt) => opt.value === props.modelValue);
+        if (highlightedIndex.value < 0) highlightedIndex.value = 0;
+    }
 };
 
 const close = () => {
     isOpen.value = false;
+    highlightedIndex.value = -1;
 };
 
 const select = (value: string | number) => {
@@ -56,8 +63,28 @@ const handleClickOutside = (event: MouseEvent) => {
 };
 
 const handleKeyDown = (event: KeyboardEvent) => {
-    if (event.key === 'Escape' && isOpen.value) {
+    if (!isOpen.value) {
+        if (['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(event.key) && dropdownRef.value?.contains(document.activeElement)) {
+            event.preventDefault();
+            toggle();
+        }
+        return;
+    }
+
+    if (event.key === 'Escape') {
+        event.preventDefault();
         close();
+    } else if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        highlightedIndex.value = (highlightedIndex.value + 1) % props.options.length;
+    } else if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        highlightedIndex.value = (highlightedIndex.value - 1 + props.options.length) % props.options.length;
+    } else if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        if (highlightedIndex.value >= 0 && highlightedIndex.value < props.options.length) {
+            select(props.options[highlightedIndex.value].value);
+        }
     }
 };
 
@@ -112,25 +139,28 @@ onUnmounted(() => {
                 ]"
                 role="listbox"
             >
-                <div class="space-y-0.5">
+                <div class="space-y-0.5 max-h-64 overflow-y-auto d-scrollbar pr-1">
                     <button
-                        v-for="option in options"
+                        v-for="(option, idx) in options"
                         :key="option.value"
                         type="button"
                         @click="select(option.value)"
+                        @mouseenter="highlightedIndex = idx"
                         role="option"
                         :aria-selected="option.value === modelValue"
                         class="w-full text-left px-3 py-2 rounded-xl transition-[background-color,color] duration-100 flex items-center justify-between group cursor-pointer touch-manipulation select-none"
                         :class="[
                             option.value === modelValue
-                                ? 'bg-[#F5F5F7] text-[#111111] font-bold'
+                                ? 'bg-[#111111] text-white font-semibold'
+                                : highlightedIndex === idx
+                                ? 'bg-[#F5F5F7] text-[#111111]'
                                 : 'text-[#1D1D1F] hover:bg-[#F5F5F7] hover:text-[#111111]',
                         ]"
                     >
                         <span class="truncate">{{ option.label }}</span>
                         <Check
                             v-if="option.value === modelValue"
-                            class="w-3.5 h-3.5 text-[#111111] shrink-0 ml-2"
+                            class="w-3.5 h-3.5 text-white shrink-0 ml-2"
                         />
                     </button>
                 </div>

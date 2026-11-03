@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import CustomerLayout from '@/Layouts/CustomerLayout.vue';
 import Button from '@/Components/Button.vue';
+import CustomDropdown from '@/Components/CustomDropdown.vue';
 import ProductCard from '@/Components/ProductCard.vue';
 import { useTrans } from '@/Composables/useTrans';
 import { ShieldCheck, Truck, RotateCcw, Star, Plus, Minus, ShoppingBag, Check } from 'lucide-vue-next';
@@ -130,6 +131,14 @@ const buyNow = () => {
 };
 
 // Review Form State
+const ratingOptions = [
+    { value: 5, label: '5 Stars — Exceptional' },
+    { value: 4, label: '4 Stars — Very Good' },
+    { value: 3, label: '3 Stars — Average' },
+    { value: 2, label: '2 Stars — Fair' },
+    { value: 1, label: '1 Star — Poor' },
+];
+
 const newReview = ref({
     rating: 5,
     title: '',
@@ -385,14 +394,13 @@ const submitReview = () => {
                         </h4>
                         <form @submit.prevent="submitReview" class="space-y-4">
                             <div>
-                                <label class="block text-xs font-semibold text-[#86868B] mb-1">Rating</label>
-                                <select v-model="newReview.rating" class="px-3 py-2 bg-[#F5F5F7] rounded-xl text-xs border border-[#E5E5EA]">
-                                    <option :value="5">5 Stars — Exceptional</option>
-                                    <option :value="4">4 Stars — Very Good</option>
-                                    <option :value="3">3 Stars — Average</option>
-                                    <option :value="2">2 Stars — Fair</option>
-                                    <option :value="1">1 Star — Poor</option>
-                                </select>
+                                <label class="block text-xs font-semibold text-[#86868B] mb-1.5">Rating</label>
+                                <CustomDropdown
+                                    v-model="newReview.rating"
+                                    :options="ratingOptions"
+                                    align="left"
+                                    min-width="w-56"
+                                />
                             </div>
                             <div>
                                 <input

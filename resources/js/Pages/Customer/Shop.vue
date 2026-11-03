@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { reactive, computed, watch } from 'vue';
+import { ref, reactive, computed, watch } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import CustomerLayout from '@/Layouts/CustomerLayout.vue';
 import ProductCard from '@/Components/ProductCard.vue';
 import Button from '@/Components/Button.vue';
 import CustomDropdown from '@/Components/CustomDropdown.vue';
 import { useTrans } from '@/Composables/useTrans';
-import { Filter, SlidersHorizontal, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-vue-next';
+import { Filter, SlidersHorizontal, RotateCcw, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-vue-next';
 
 interface Props {
     products: {
@@ -50,6 +50,23 @@ const sortOptions = computed(() => [
     { value: 'price_asc', label: t('shop.sort.price_asc') },
     { value: 'price_desc', label: t('shop.sort.price_desc') },
 ]);
+
+const showAllCategories = ref(false);
+const showAllBrands = ref(false);
+
+const displayedCategories = computed(() => {
+    if (showAllCategories.value || props.categories.length <= 8) {
+        return props.categories;
+    }
+    return props.categories.slice(0, 7);
+});
+
+const displayedBrands = computed(() => {
+    if (showAllBrands.value || props.brands.length <= 8) {
+        return props.brands;
+    }
+    return props.brands.slice(0, 7);
+});
 
 const applyFilters = () => {
     router.get('/shop', {
@@ -134,7 +151,7 @@ const clearFilters = () => {
                             <label class="text-xs font-bold uppercase tracking-wider text-[#86868B]">
                                 {{ t('nav.categories') }}
                             </label>
-                            <div class="space-y-1 max-h-72 overflow-y-auto d-scrollbar pr-1.5">
+                            <div class="space-y-1 max-h-80 overflow-y-auto d-scrollbar pr-3">
                                 <button
                                     type="button"
                                     @click="form.category = ''; applyFilters()"
@@ -144,7 +161,7 @@ const clearFilters = () => {
                                     <span>{{ t('shop.all_categories') }}</span>
                                 </button>
                                 <button
-                                    v-for="cat in categories"
+                                    v-for="cat in displayedCategories"
                                     :key="cat.id"
                                     type="button"
                                     @click="form.category = cat.slug; applyFilters()"
@@ -155,6 +172,15 @@ const clearFilters = () => {
                                     <span class="text-[10px] opacity-60 ml-2">({{ cat.products_count }})</span>
                                 </button>
                             </div>
+                            <button
+                                v-if="categories.length > 8"
+                                type="button"
+                                @click="showAllCategories = !showAllCategories"
+                                class="w-full py-1.5 text-[11px] font-semibold text-[#0071E3] hover:text-[#0077ED] flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                            >
+                                <span>{{ showAllCategories ? 'Show Less' : `+ Show ${categories.length - 7} More` }}</span>
+                                <component :is="showAllCategories ? ChevronUp : ChevronDown" class="w-3 h-3" />
+                            </button>
                         </div>
 
                         <!-- Brands Filter -->
@@ -162,9 +188,9 @@ const clearFilters = () => {
                             <label class="text-xs font-bold uppercase tracking-wider text-[#86868B]">
                                 Brands
                             </label>
-                            <div class="space-y-1 max-h-64 overflow-y-auto d-scrollbar pr-1.5">
+                            <div class="space-y-1 max-h-80 overflow-y-auto d-scrollbar pr-3">
                                 <button
-                                    v-for="brand in brands"
+                                    v-for="brand in displayedBrands"
                                     :key="brand.id"
                                     type="button"
                                     @click="form.brand = (form.brand === brand.slug ? '' : brand.slug); applyFilters()"
@@ -175,6 +201,15 @@ const clearFilters = () => {
                                     <span class="text-[10px] opacity-60 ml-2">({{ brand.products_count }})</span>
                                 </button>
                             </div>
+                            <button
+                                v-if="brands.length > 8"
+                                type="button"
+                                @click="showAllBrands = !showAllBrands"
+                                class="w-full py-1.5 text-[11px] font-semibold text-[#0071E3] hover:text-[#0077ED] flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                            >
+                                <span>{{ showAllBrands ? 'Show Less' : `+ Show ${brands.length - 7} More` }}</span>
+                                <component :is="showAllBrands ? ChevronUp : ChevronDown" class="w-3 h-3" />
+                            </button>
                         </div>
 
                         <!-- Price Range -->

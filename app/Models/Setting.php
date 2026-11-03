@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class Setting extends Model
 {
@@ -24,15 +25,67 @@ class Setting extends Model
         ];
     }
 
+    /**
+     * In-memory request cache to prevent redundant DB calls in the same lifecycle.
+     * @var array<string, mixed>|null
+     */
+    protected static ?array $runtimeCache = null;
+
+    protected static function boot(): void
+    {
+        parent::boot();
+
+        static::saved(function () {
+            static::clearCache();
+        });
+
+        static::deleted(function () {
+            static::clearCache();
+        });
+    }
+
+    public static function clearCache(): void
+    {
+        static::$runtimeCache = null;
+        try {
+            Cache::forget('dstore_all_settings');
+        } catch (\Throwable) {
+            // Ignore during early migrations / bootstrap
+        }
+    }
+
+    /**
+     * Retrieve all settings mapped by key, cached for 1 hour.
+     */
+    protected static function allSettings(): array
+    {
+        if (static::$runtimeCache !== null) {
+            return static::$runtimeCache;
+        }
+
+        try {
+            $settings = Cache::remember('dstore_all_settings', 3600, function () {
+                return static::all()->keyBy('key');
+            });
+        } catch (\Throwable) {
+            $settings = static::all()->keyBy('key');
+        }
+
+        static::$runtimeCache = $settings ? $settings->all() : [];
+        return static::$runtimeCache;
+    }
+
     public static function get(string $key, mixed $default = null): mixed
     {
-        $setting = static::where('key', $key)->first();
+        $all = static::allSettings();
+        $setting = $all[$key] ?? null;
+
         if (!$setting) {
             return $default;
         }
 
         return match ($setting->type) {
-            'json' => json_decode($setting->value, true) ?: $default,
+            'json' => is_array($setting->value) ? $setting->value : (json_decode($setting->value, true) ?: $default),
             'boolean' => filter_var($setting->value, FILTER_VALIDATE_BOOLEAN),
             'number' => is_numeric($setting->value) ? $setting->value + 0 : $default,
             default => $setting->value,
@@ -56,5 +109,7 @@ class Setting extends Model
                 'is_public' => $isPublic,
             ]
         );
+
+        static::clearCache();
     }
 }

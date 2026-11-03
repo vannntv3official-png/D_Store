@@ -25,6 +25,10 @@
     --ease-apple-spring: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
+:root, html {
+    color-scheme: light;
+}
+
 /* Custom Base Styles for Apple-Minimalist & Native Mobile Polish */
 html {
     scroll-behavior: smooth;
@@ -107,41 +111,54 @@ button, [role="button"], .tab, .chip, .drag-handle {
    ========================================================================== */
 
 /* Standard Firefox / W3C scrollbar specification */
-* {
+*, *::before, *::after {
     scrollbar-width: thin;
     scrollbar-color: rgba(0, 0, 0, 0.18) transparent;
 }
 
 /* WebKit / Chromium (Chrome, Edge, Safari, Opera) */
+*::-webkit-scrollbar,
 ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
 }
 
+*::-webkit-scrollbar-track,
 ::-webkit-scrollbar-track {
-    background: transparent;
+    background: transparent !important;
     border-radius: 9999px;
 }
 
+*::-webkit-scrollbar-thumb,
 ::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.16);
-    border-radius: 9999px;
+    background: rgba(0, 0, 0, 0.16) !important;
+    border-radius: 9999px !important;
+    border: 1px solid transparent !important;
+    background-clip: padding-box !important;
     transition: background-color 0.2s ease;
 }
 
+*::-webkit-scrollbar-thumb:hover,
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 0, 0, 0.32);
+    background: rgba(0, 0, 0, 0.35) !important;
 }
 
+*::-webkit-scrollbar-thumb:active,
 ::-webkit-scrollbar-thumb:active {
-    background: rgba(0, 0, 0, 0.48);
+    background: rgba(0, 0, 0, 0.5) !important;
 }
 
-/* Eliminate harsh Windows default scrollbar buttons / arrows */
+/* Eliminate harsh Windows default scrollbar buttons / arrows completely */
+*::-webkit-scrollbar-button,
 ::-webkit-scrollbar-button {
-    display: none;
-    width: 0;
-    height: 0;
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+*::-webkit-scrollbar-corner,
+::-webkit-scrollbar-corner {
+    background: transparent !important;
 }
 
 /* Dedicated luxury scroll container utility */
@@ -158,21 +175,21 @@ button, [role="button"], .tab, .chip, .drag-handle {
 }
 
 .d-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
+    background: transparent !important;
 }
 
 .d-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.15);
-    border-radius: 9999px;
+    background: rgba(0, 0, 0, 0.18) !important;
+    border-radius: 9999px !important;
 }
 
 .d-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 0, 0, 0.35);
+    background: rgba(0, 0, 0, 0.38) !important;
 }
 
 /* Utility to completely hide scrollbar while preserving scroll functionality */
 .no-scrollbar::-webkit-scrollbar {
-    display: none;
+    display: none !important;
 }
 .no-scrollbar {
     -ms-overflow-style: none;

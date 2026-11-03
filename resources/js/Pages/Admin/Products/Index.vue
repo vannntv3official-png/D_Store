@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import Button from '@/Components/Button.vue';
 import Input from '@/Components/Input.vue';
 import Select from '@/Components/Select.vue';
+import CustomDropdown from '@/Components/CustomDropdown.vue';
 import Badge from '@/Components/Badge.vue';
 import { Plus, Download, Search, Edit3, Trash2, ExternalLink } from 'lucide-vue-next';
 
@@ -56,6 +57,11 @@ const props = defineProps<Props>();
 
 const search = ref(props.filters.q || '');
 const selectedCategory = ref(props.filters.category_id || '');
+
+const categoryOptions = computed(() => [
+    { value: '', label: 'All Categories' },
+    ...(props.categories || []).map((c) => ({ value: String(c.id), label: c.name_en })),
+]);
 
 const applyFilters = () => {
     router.get(
@@ -128,16 +134,13 @@ const getStatusBadgeVariant = (status: string) => {
                 </div>
 
                 <div class="w-full sm:w-56">
-                    <select
+                    <CustomDropdown
                         v-model="selectedCategory"
+                        :options="categoryOptions"
                         @change="applyFilters"
-                        class="w-full py-2 px-3 text-xs bg-[#F5F5F7] border border-transparent rounded-xl focus:bg-white focus:border-[#111111] outline-none transition-all cursor-pointer"
-                    >
-                        <option value="">All Categories</option>
-                        <option v-for="cat in categories" :key="cat.id" :value="cat.id">
-                            {{ cat.name_en }}
-                        </option>
-                    </select>
+                        align="left"
+                        min-width="w-56"
+                    />
                 </div>
 
                 <Button variant="secondary" size="sm" @click="applyFilters" class="w-full sm:w-auto">
