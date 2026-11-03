@@ -29,8 +29,11 @@ class ProductAdminController extends Controller
         if ($search = $request->query('q')) {
             $term = '%' . trim((string) $search) . '%';
             $query->where(function ($q) use ($term) {
-                $q->where('name', 'like', $term)
-                    ->orWhere('slug', 'like', $term);
+                $q->where('name->en', 'like', $term)
+                    ->orWhere('name->km', 'like', $term)
+                    ->orWhere('slug', 'like', $term)
+                    ->orWhereHas('brand', fn ($b) => $b->where('name', 'like', $term))
+                    ->orWhereHas('variants', fn ($v) => $v->where('sku', 'like', $term));
             });
         }
 
@@ -100,6 +103,10 @@ class ProductAdminController extends Controller
             'description_km' => ['nullable', 'string'],
             'status' => ['required', 'in:active,draft,archived'],
             'is_featured' => ['boolean'],
+            'images' => ['nullable', 'array'],
+            'images.*.image_url' => ['required', 'string'],
+            'images.*.alt_text' => ['nullable', 'string'],
+            'images.*.is_primary' => ['nullable', 'boolean'],
             'variants' => ['required', 'array', 'min:1'],
             'variants.*.sku' => ['required', 'string', 'max:64', 'unique:product_variants,sku'],
             'variants.*.price' => ['required', 'numeric', 'min:0'],
@@ -115,7 +122,7 @@ class ProductAdminController extends Controller
 
             $product = Product::create([
                 'category_id' => (int) $validated['category_id'],
-                'brand_id' => $validated['brand_id'] ? (int) $validated['brand_id'] : null,
+                'brand_id' => !empty($validated['brand_id']) ? (int) $validated['brand_id'] : null,
                 'name' => [
                     'en' => $validated['name_en'],
                     'km' => $validated['name_km'],
@@ -129,12 +136,26 @@ class ProductAdminController extends Controller
                 'is_featured' => $validated['is_featured'] ?? false,
             ]);
 
+            if (!empty($validated['images'])) {
+                foreach ($validated['images'] as $idx => $img) {
+                    if (!empty($img['image_url'])) {
+                        ProductImage::create([
+                            'product_id' => $product->id,
+                            'image_url' => $img['image_url'],
+                            'alt_text' => $img['alt_text'] ?? $product->getLocalizedName(),
+                            'display_order' => $idx,
+                            'is_primary' => (bool) ($img['is_primary'] ?? ($idx === 0)),
+                        ]);
+                    }
+                }
+            }
+
             foreach ($validated['variants'] as $vData) {
                 $variant = ProductVariant::create([
                     'product_id' => $product->id,
                     'sku' => strtoupper($vData['sku']),
                     'barcode' => $vData['barcode'] ?? null,
-                    'price' => Money::format((string) $vData['price']),
+                    'price' => number_format((float) $vData['price'], 4, '.', ''),
                     'is_active' => true,
                 ]);
 
@@ -198,22 +219,86 @@ class ProductAdminController extends Controller
             'description_km' => ['nullable', 'string'],
             'status' => ['required', 'in:active,draft,archived'],
             'is_featured' => ['boolean'],
+            'images' => ['nullable', 'array'],
+            'images.*.image_url' => ['required', 'string'],
+            'images.*.alt_text' => ['nullable', 'string'],
+            'images.*.is_primary' => ['nullable', 'boolean'],
+            'variants' => ['nullable', 'array'],
+            'variants.*.id' => ['nullable', 'integer'],
+            'variants.*.sku' => ['required_with:variants', 'string', 'max:64'],
+            'variants.*.price' => ['required_with:variants', 'numeric', 'min:0'],
+            'variants.*.barcode' => ['nullable', 'string', 'max:64'],
+            'variants.*.stock' => ['nullable', 'integer', 'min:0'],
+            'variants.*.initial_stock' => ['nullable', 'integer', 'min:0'],
         ]);
 
-        $product->update([
-            'category_id' => (int) $validated['category_id'],
-            'brand_id' => $validated['brand_id'] ? (int) $validated['brand_id'] : null,
-            'name' => [
-                'en' => $validated['name_en'],
-                'km' => $validated['name_km'],
-            ],
-            'description' => [
-                'en' => $validated['description_en'] ?? '',
-                'km' => $validated['description_km'] ?? '',
-            ],
-            'status' => $validated['status'],
-            'is_featured' => $validated['is_featured'] ?? false,
-        ]);
+        DB::transaction(function () use ($product, $validated) {
+            $product->update([
+                'category_id' => (int) $validated['category_id'],
+                'brand_id' => !empty($validated['brand_id']) ? (int) $validated['brand_id'] : null,
+                'name' => [
+                    'en' => $validated['name_en'],
+                    'km' => $validated['name_km'],
+                ],
+                'description' => [
+                    'en' => $validated['description_en'] ?? '',
+                    'km' => $validated['description_km'] ?? '',
+                ],
+                'status' => $validated['status'],
+                'is_featured' => $validated['is_featured'] ?? false,
+            ]);
+
+            // Sync images if provided
+            if (isset($validated['images'])) {
+                $product->images()->delete();
+                foreach ($validated['images'] as $idx => $img) {
+                    if (!empty($img['image_url'])) {
+                        ProductImage::create([
+                            'product_id' => $product->id,
+                            'image_url' => $img['image_url'],
+                            'alt_text' => $img['alt_text'] ?? $product->getLocalizedName(),
+                            'display_order' => $idx,
+                            'is_primary' => (bool) ($img['is_primary'] ?? ($idx === 0)),
+                        ]);
+                    }
+                }
+            }
+
+            // Sync variants if provided
+            if (!empty($validated['variants'])) {
+                foreach ($validated['variants'] as $vData) {
+                    $stockQty = (int) ($vData['stock'] ?? $vData['initial_stock'] ?? 0);
+                    if (!empty($vData['id'])) {
+                        $variant = ProductVariant::where('product_id', $product->id)->find($vData['id']);
+                        if ($variant) {
+                            $variant->update([
+                                'sku' => strtoupper($vData['sku']),
+                                'barcode' => $vData['barcode'] ?? null,
+                                'price' => number_format((float) $vData['price'], 4, '.', ''),
+                            ]);
+                            $inventory = Inventory::firstOrCreate(
+                                ['product_variant_id' => $variant->id],
+                                ['on_hand_quantity' => 0, 'reserved_quantity' => 0]
+                            );
+                            $inventory->update(['on_hand_quantity' => max(0, $stockQty)]);
+                        }
+                    } else if (!empty($vData['sku'])) {
+                        $variant = ProductVariant::create([
+                            'product_id' => $product->id,
+                            'sku' => strtoupper($vData['sku']),
+                            'barcode' => $vData['barcode'] ?? null,
+                            'price' => number_format((float) $vData['price'], 4, '.', ''),
+                            'is_active' => true,
+                        ]);
+                        Inventory::create([
+                            'product_variant_id' => $variant->id,
+                            'on_hand_quantity' => max(0, $stockQty),
+                            'reserved_quantity' => 0,
+                        ]);
+                    }
+                }
+            }
+        });
 
         return redirect()->route('admin.products.index')->with('success', 'Product updated successfully.');
     }

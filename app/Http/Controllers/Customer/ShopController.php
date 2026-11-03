@@ -22,13 +22,15 @@ class ShopController extends Controller
         $rate = (int) Setting::get('exchange_rate_khr_per_usd', 4100);
 
         $query = Product::where('status', 'active')
-            ->with(['brand:id,name,slug', 'category:id,name,slug', 'images', 'variants.inventory']);
+            ->with(['brand:id,name,slug', 'category:id,name,slug', 'images', 'variants.inventory'])
+            ->withCount('approvedReviews');
 
-        // Search term
+        // Search term (Bilingual and SKU aware)
         if ($search = $request->query('q')) {
             $searchTerm = '%' . trim((string) $search) . '%';
             $query->where(function (Builder $q) use ($searchTerm) {
-                $q->where('name', 'like', $searchTerm)
+                $q->where('name->en', 'like', $searchTerm)
+                    ->orWhere('name->km', 'like', $searchTerm)
                     ->orWhere('slug', 'like', $searchTerm)
                     ->orWhereHas('brand', fn ($b) => $b->where('name', 'like', $searchTerm))
                     ->orWhereHas('variants', fn ($v) => $v->where('sku', 'like', $searchTerm));
@@ -107,7 +109,7 @@ class ShopController extends Controller
                 'compare_at_price' => $compareAt ? Money::format($compareAt) : null,
                 'primary_image' => $primaryImage?->image_url ?? '/images/placeholder.svg',
                 'rating_cache' => 5.0,
-                'review_count' => $product->reviews()->count(),
+                'review_count' => (int) ($product->approved_reviews_count ?? 0),
                 'in_stock' => $totalStock > 0,
                 'total_stock' => $totalStock,
             ];

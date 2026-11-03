@@ -52,6 +52,11 @@ class ProductVariant extends Model
         return $this->hasMany(ProductVariantAttribute::class);
     }
 
+    public function images(): HasMany
+    {
+        return $this->hasMany(ProductImage::class, 'product_variant_id');
+    }
+
     public function inventoryMovements(): HasMany
     {
         return $this->hasMany(InventoryMovement::class);

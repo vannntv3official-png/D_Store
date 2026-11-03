@@ -6,7 +6,7 @@ import Button from '@/Components/Button.vue';
 import Input from '@/Components/Input.vue';
 import Select from '@/Components/Select.vue';
 import Textarea from '@/Components/Textarea.vue';
-import { ArrowLeft, Save, Plus, Trash2, Layers } from 'lucide-vue-next';
+import { ArrowLeft, Save, Plus, Trash2, Image as ImageIcon, Check } from 'lucide-vue-next';
 
 interface CategoryOption {
     id: number;
@@ -40,7 +40,12 @@ interface ProductData {
     status: string;
     is_featured: boolean;
     variants?: ProductVariantData[];
-    images?: any[];
+    images?: Array<{
+        id?: number;
+        image_url: string;
+        alt_text?: string | null;
+        is_primary?: boolean;
+    }>;
 }
 
 interface Props {
@@ -61,11 +66,26 @@ const form = reactive({
     description_km: props.product?.description_km || '',
     status: props.product?.status || 'active',
     is_featured: props.product?.is_featured || false,
+    images: props.product?.images && props.product.images.length > 0
+        ? props.product.images.map((img) => ({
+              image_url: img.image_url,
+              alt_text: img.alt_text || '',
+              is_primary: !!img.is_primary,
+          }))
+        : [
+              {
+                  image_url: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=800&auto=format&fit=crop',
+                  alt_text: 'Primary Image',
+                  is_primary: true,
+              },
+          ],
     variants: props.product?.variants && props.product.variants.length > 0
         ? props.product.variants.map((v) => ({
+              id: v.id,
               sku: v.sku,
               price: v.price,
-              initial_stock: v.stock || 10,
+              initial_stock: v.stock ?? 10,
+              stock: v.stock ?? 10,
               barcode: v.barcode || '',
           }))
         : [
@@ -73,6 +93,7 @@ const form = reactive({
                   sku: '',
                   price: '0.00',
                   initial_stock: 10,
+                  stock: 10,
                   barcode: '',
               },
           ],
@@ -86,6 +107,7 @@ const addVariantRow = () => {
         sku: '',
         price: '0.00',
         initial_stock: 5,
+        stock: 5,
         barcode: '',
     });
 };
@@ -94,6 +116,30 @@ const removeVariantRow = (index: number) => {
     if (form.variants.length > 1) {
         form.variants.splice(index, 1);
     }
+};
+
+const addImageRow = () => {
+    form.images.push({
+        image_url: '',
+        alt_text: '',
+        is_primary: form.images.length === 0,
+    });
+};
+
+const removeImageRow = (index: number) => {
+    if (form.images.length > 1) {
+        const removedWasPrimary = form.images[index].is_primary;
+        form.images.splice(index, 1);
+        if (removedWasPrimary && form.images.length > 0) {
+            form.images[0].is_primary = true;
+        }
+    }
+};
+
+const setPrimaryImage = (index: number) => {
+    form.images.forEach((img, i) => {
+        img.is_primary = (i === index);
+    });
 };
 
 const categoryOptions = computed(() =>
@@ -249,14 +295,90 @@ const submit = () => {
                     </div>
                 </div>
 
-                <!-- Variants & Inventory Card (Required for create) -->
-                <div v-if="!isEdit" class="bg-white rounded-3xl p-6 sm:p-8 border border-[#E5E5EA] shadow-sm space-y-6">
+                <!-- 2. Media & Product Gallery Images -->
+                <div class="bg-white rounded-3xl p-6 sm:p-8 border border-[#E5E5EA] shadow-sm space-y-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-xs font-bold uppercase tracking-wider text-[#111111] flex items-center gap-2">
+                                <ImageIcon class="w-4 h-4" />
+                                <span>2. Media & Visual Assets</span>
+                            </h2>
+                            <p class="text-xs text-[#86868B] mt-0.5">High-resolution image URLs. Select which image serves as the primary showcase.</p>
+                        </div>
+                        <Button type="button" variant="secondary" size="sm" @click="addImageRow" class="flex items-center gap-1.5">
+                            <Plus class="w-3.5 h-3.5" />
+                            <span>Add Image URL</span>
+                        </Button>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div
+                            v-for="(img, idx) in form.images"
+                            :key="idx"
+                            class="p-4 rounded-2xl bg-[#FBFBFC] border border-[#E5E5EA] flex flex-col sm:flex-row items-start sm:items-center gap-4"
+                        >
+                            <div class="w-16 h-16 rounded-xl bg-white border border-[#E5E5EA] overflow-hidden flex items-center justify-center shrink-0">
+                                <img
+                                    v-if="img.image_url"
+                                    :src="img.image_url"
+                                    :alt="img.alt_text || 'Preview'"
+                                    class="w-full h-full object-contain"
+                                    @error="(e: any) => e.target.src = '/images/placeholder.svg'"
+                                />
+                                <ImageIcon v-else class="w-6 h-6 text-[#86868B]" />
+                            </div>
+
+                            <div class="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
+                                <div class="sm:col-span-2">
+                                    <Input
+                                        v-model="img.image_url"
+                                        label="Image URL"
+                                        placeholder="https://... or /images/..."
+                                        :error="errors[`images.${idx}.image_url`]"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <Input
+                                        v-model="img.alt_text"
+                                        label="Alt Description"
+                                        placeholder="e.g. Front view"
+                                    />
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-2 sm:self-center">
+                                <button
+                                    type="button"
+                                    @click="setPrimaryImage(idx)"
+                                    class="px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-all flex items-center gap-1 cursor-pointer"
+                                    :class="img.is_primary ? 'bg-[#111111] text-white border-[#111111]' : 'bg-white text-[#86868B] border-[#E5E5EA] hover:border-[#111111]'"
+                                >
+                                    <Check v-if="img.is_primary" class="w-3 h-3" />
+                                    <span>{{ img.is_primary ? 'Primary' : 'Set Primary' }}</span>
+                                </button>
+                                <button
+                                    v-if="form.images.length > 1"
+                                    type="button"
+                                    @click="removeImageRow(idx)"
+                                    class="p-2 text-[#86868B] hover:text-[#DC2626] rounded-lg hover:bg-white transition-colors"
+                                    title="Remove Image"
+                                >
+                                    <Trash2 class="w-4 h-4" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Variants & Inventory Quantities -->
+                <div class="bg-white rounded-3xl p-6 sm:p-8 border border-[#E5E5EA] shadow-sm space-y-6">
                     <div class="flex items-center justify-between">
                         <div>
                             <h2 class="text-xs font-bold uppercase tracking-wider text-[#111111]">
-                                2. Stock Keeping Units (SKUs) & Initial Inventory
+                                3. Stock Keeping Units (SKUs) & Inventory Levels
                             </h2>
-                            <p class="text-xs text-[#86868B] mt-0.5">At least one variant is required with unique SKU and initial stock.</p>
+                            <p class="text-xs text-[#86868B] mt-0.5">Manage variant pricing, barcodes, and current on-hand warehouse stock.</p>
                         </div>
                         <Button type="button" variant="secondary" size="sm" @click="addVariantRow" class="flex items-center gap-1.5">
                             <Plus class="w-3.5 h-3.5" />
@@ -288,11 +410,11 @@ const submit = () => {
                                     required
                                 />
                                 <Input
-                                    v-model="v.initial_stock"
+                                    v-model="v.stock"
                                     type="number"
-                                    label="Initial Stock"
+                                    label="Available Stock"
                                     placeholder="10"
-                                    :error="errors[`variants.${idx}.initial_stock`]"
+                                    :error="errors[`variants.${idx}.stock`]"
                                     required
                                 />
                                 <Input
@@ -306,7 +428,7 @@ const submit = () => {
                                 v-if="form.variants.length > 1"
                                 type="button"
                                 @click="removeVariantRow(idx)"
-                                class="p-2 text-[#86868B] hover:text-[#DC2626] rounded-lg hover:bg-white transition-colors sm:self-center"
+                                class="p-2 text-[#86868B] hover:text-[#DC2626] rounded-lg hover:bg-white transition-colors sm:self-center cursor-pointer"
                                 title="Remove Variant"
                             >
                                 <Trash2 class="w-4 h-4" />

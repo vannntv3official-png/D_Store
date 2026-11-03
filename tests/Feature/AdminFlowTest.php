@@ -196,4 +196,122 @@ class AdminFlowTest extends TestCase
         $responseCustomerLogin->assertRedirect(route('admin.dashboard'));
         $this->assertAuthenticatedAs($this->adminUser);
     }
+
+    public function test_admin_dashboard_timeframe_filtering_and_operational_intelligence(): void
+    {
+        $response = $this->actingAs($this->adminUser)->get('/admin?period=7d');
+        $response->assertStatus(200);
+        $response->assertInertia(fn ($page) => $page
+            ->component('Admin/Dashboard')
+            ->has('metrics.paid_revenue')
+            ->has('metrics.gross_revenue')
+            ->has('chart.labels')
+            ->where('chart.period', '7d')
+            ->has('lowStockWatchlist')
+            ->has('topSelling')
+        );
+
+        $response90d = $this->actingAs($this->adminUser)->get('/admin?period=90d');
+        $response90d->assertStatus(200);
+        $response90d->assertInertia(fn ($page) => $page
+            ->where('chart.period', '90d')
+        );
+    }
+
+    public function test_admin_can_create_and_update_product_with_variants_and_images(): void
+    {
+        $category = Category::firstOrCreate(
+            ['slug' => 'test-laptops'],
+            [
+                'name' => ['en' => 'Test Laptops', 'km' => 'កុំព្យូទ័រយួរដៃសាកល្បង'],
+                'display_order' => 1,
+                'is_active' => true,
+            ]
+        );
+
+        // 1. Create product
+        $storeResponse = $this->actingAs($this->adminUser)->post('/admin/products', [
+            'name_en' => 'MacBook Pro M4 Pro',
+            'name_km' => 'កុំព្យូទ័រ MacBook Pro M4 Pro',
+            'category_id' => $category->id,
+            'status' => 'active',
+            'is_featured' => true,
+            'images' => [
+                [
+                    'image_url' => 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800',
+                    'alt_text' => 'MacBook Pro Front',
+                    'is_primary' => true,
+                ],
+            ],
+            'variants' => [
+                [
+                    'sku' => 'MBP-M4-512GB-TEST',
+                    'price' => '1999.00',
+                    'initial_stock' => 12,
+                    'barcode' => '195949000001',
+                ],
+            ],
+        ]);
+
+        $storeResponse->assertRedirect('/admin/products');
+        $product = Product::where('slug', 'like', 'macbook-pro-m4-pro%')->first();
+        $this->assertNotNull($product);
+        $this->assertCount(1, $product->variants);
+        $this->assertCount(1, $product->images);
+
+        $variant = $product->variants->first();
+        $this->assertEquals('1999.0000', $variant->price);
+        $this->assertEquals(12, $variant->inventory->on_hand_quantity);
+
+        // 2. Update product & variant price
+        $updateResponse = $this->actingAs($this->adminUser)->put("/admin/products/{$product->id}", [
+            'name_en' => 'MacBook Pro M4 Pro (Updated)',
+            'name_km' => 'កុំព្យូទ័រ MacBook Pro M4 Pro (កែប្រែ)',
+            'category_id' => $category->id,
+            'status' => 'active',
+            'is_featured' => true,
+            'images' => [
+                [
+                    'image_url' => 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800',
+                    'alt_text' => 'MacBook Pro Front',
+                    'is_primary' => true,
+                ],
+                [
+                    'image_url' => 'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=800',
+                    'alt_text' => 'MacBook Pro Side',
+                    'is_primary' => false,
+                ],
+            ],
+            'variants' => [
+                [
+                    'id' => $variant->id,
+                    'sku' => 'MBP-M4-512GB-TEST',
+                    'price' => '1899.00',
+                    'stock' => 15,
+                    'barcode' => '195949000001',
+                ],
+            ],
+        ]);
+
+        $updateResponse->assertRedirect('/admin/products');
+        $variant->refresh();
+        $this->assertEquals('1899.0000', $variant->price);
+        $this->assertEquals(15, $variant->inventory->on_hand_quantity);
+        $this->assertCount(2, $product->images()->get());
+    }
+
+    public function test_catalog_search_supports_bilingual_and_sku(): void
+    {
+        // Search by SKU
+        $responseSku = $this->get('/shop?q=IP16PM-256-TI');
+        $responseSku->assertStatus(200);
+
+        // Search by English name
+        $responseEn = $this->get('/shop?q=iPhone');
+        $responseEn->assertStatus(200);
+
+        // Search by Khmer keyword
+        $responseKm = $this->get('/shop?q=' . urlencode('ទូរស័ព្ទ'));
+        $responseKm->assertStatus(200);
+    }
 }

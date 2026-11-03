@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import CustomerLayout from '@/Layouts/CustomerLayout.vue';
 import Button from '@/Components/Button.vue';
@@ -71,6 +71,15 @@ const selectedVariant = computed(() => props.product.variants[selectedVariantInd
 
 const selectedImage = ref(props.product.images[0]?.image_url || '/images/placeholder.svg');
 const quantity = ref(1);
+
+watch(selectedVariant, (v) => {
+    if (v?.image_url) {
+        selectedImage.value = v.image_url;
+    }
+    if (v && v.available_stock > 0 && quantity.value > v.available_stock) {
+        quantity.value = v.available_stock;
+    }
+});
 
 const isSubmitting = ref(false);
 
