@@ -126,25 +126,31 @@ class CheckoutController extends Controller
         $user = $request->user();
         $cartToken = $request->cookie('dstore_cart_token');
         $cart = $this->cartService->getOrCreateCart($user, $cartToken);
+        $cart->shipping_method_id = (int) $validated['shipping_method_id'];
+        $cart->save();
 
-        $order = $this->checkoutService->processCheckout(
+        $addressLine = $validated['street_address'];
+        if (!empty($validated['commune'])) {
+            $addressLine .= ', ' . $validated['commune'];
+        }
+
+        $result = $this->checkoutService->processCheckout(
             cart: $cart,
-            user: $user,
-            customerData: [
-                'recipient_name' => $validated['recipient_name'],
-                'phone' => $validated['phone'],
+            shippingAddressData: [
+                'contact_name' => $validated['recipient_name'],
+                'contact_phone' => $validated['phone'],
                 'email' => $validated['email'] ?? null,
-                'province' => $validated['province'],
-                'district' => $validated['district'],
-                'commune' => $validated['commune'] ?? null,
-                'street_address' => $validated['street_address'],
-                'delivery_notes' => $validated['delivery_notes'] ?? null,
+                'province_name' => $validated['province'],
+                'district_name' => $validated['district'],
+                'address_line' => $addressLine,
             ],
-            shippingMethodId: (int) $validated['shipping_method_id'],
             paymentMethod: $validated['payment_method'],
             idempotencyKey: $validated['idempotency_key'],
-            pointsToRedeem: (int) ($validated['points_to_redeem'] ?? 0),
+            user: $user,
+            deliveryNotes: $validated['delivery_notes'] ?? null,
         );
+
+        $order = $result['order'];
 
         return redirect()->route('orders.confirmed', ['orderNumber' => $order->order_number])
             ->with('success', 'Order created successfully!')
