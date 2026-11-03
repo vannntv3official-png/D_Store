@@ -21,8 +21,13 @@ export function useTrans() {
         const translations = localization.value.translations || {};
         let text = translations[key] || key;
 
-        Object.keys(replacements).forEach((placeholder) => {
-            text = text.replace(new RegExp(`:${placeholder}`, 'g'), String(replacements[placeholder]));
+        // Sort keys descending by length so longer placeholders (e.g. "total")
+        // are replaced before shorter substring placeholders (e.g. "to"),
+        // preventing "total" from accidentally turning into "7tal".
+        const keys = Object.keys(replacements).sort((a, b) => b.length - a.length);
+
+        keys.forEach((placeholder) => {
+            text = text.replace(new RegExp(`:${placeholder}(?![a-zA-Z0-9_])`, 'g'), String(replacements[placeholder]));
         });
 
         return text;

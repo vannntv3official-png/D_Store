@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { reactive, watch } from 'vue';
+import { reactive, computed, watch } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import CustomerLayout from '@/Layouts/CustomerLayout.vue';
 import ProductCard from '@/Components/ProductCard.vue';
 import Button from '@/Components/Button.vue';
+import CustomDropdown from '@/Components/CustomDropdown.vue';
 import { useTrans } from '@/Composables/useTrans';
 import { Filter, SlidersHorizontal, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-vue-next';
 
@@ -42,6 +43,13 @@ const form = reactive({
     in_stock: props.filters.in_stock || false,
     sort: props.filters.sort || 'popular',
 });
+
+const sortOptions = computed(() => [
+    { value: 'popular', label: t('shop.sort.popular') },
+    { value: 'newest', label: t('shop.sort.newest') },
+    { value: 'price_asc', label: t('shop.sort.price_asc') },
+    { value: 'price_desc', label: t('shop.sort.price_desc') },
+]);
 
 const applyFilters = () => {
     router.get('/shop', {
@@ -92,16 +100,12 @@ const clearFilters = () => {
                         {{ t('shop.showing_results', { from: products.from || 0, to: products.to || 0, total: products.total }) }}
                     </span>
 
-                    <select
+                    <CustomDropdown
                         v-model="form.sort"
+                        :options="sortOptions"
                         @change="applyFilters"
-                        class="px-3.5 py-2 rounded-xl bg-white border border-[#E5E5EA] text-xs font-semibold text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-[#111111] cursor-pointer"
-                    >
-                        <option value="popular">{{ t('shop.sort.popular') }}</option>
-                        <option value="newest">{{ t('shop.sort.newest') }}</option>
-                        <option value="price_asc">{{ t('shop.sort.price_asc') }}</option>
-                        <option value="price_desc">{{ t('shop.sort.price_desc') }}</option>
-                    </select>
+                        align="right"
+                    />
                 </div>
             </div>
 
@@ -130,12 +134,12 @@ const clearFilters = () => {
                             <label class="text-xs font-bold uppercase tracking-wider text-[#86868B]">
                                 {{ t('nav.categories') }}
                             </label>
-                            <div class="space-y-1 max-h-56 overflow-y-auto pr-1">
+                            <div class="space-y-1 max-h-72 overflow-y-auto d-scrollbar pr-1.5">
                                 <button
                                     type="button"
                                     @click="form.category = ''; applyFilters()"
-                                    class="w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center justify-between"
-                                    :class="!form.category ? 'bg-[#111111] text-white' : 'text-[#1D1D1F] hover:bg-[#F5F5F7]'"
+                                    class="w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition-[background-color,color] duration-150 flex items-center justify-between cursor-pointer touch-manipulation select-none active:scale-[0.98]"
+                                    :class="!form.category ? 'bg-[#111111] text-white shadow-sm' : 'text-[#1D1D1F] hover:bg-[#F5F5F7]'"
                                 >
                                     <span>{{ t('shop.all_categories') }}</span>
                                 </button>
@@ -144,8 +148,8 @@ const clearFilters = () => {
                                     :key="cat.id"
                                     type="button"
                                     @click="form.category = cat.slug; applyFilters()"
-                                    class="w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center justify-between"
-                                    :class="form.category === cat.slug ? 'bg-[#111111] text-white' : 'text-[#1D1D1F] hover:bg-[#F5F5F7]'"
+                                    class="w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition-[background-color,color] duration-150 flex items-center justify-between cursor-pointer touch-manipulation select-none active:scale-[0.98]"
+                                    :class="form.category === cat.slug ? 'bg-[#111111] text-white shadow-sm' : 'text-[#1D1D1F] hover:bg-[#F5F5F7]'"
                                 >
                                     <span class="truncate">{{ currentLocale === 'km' && cat.name_km ? cat.name_km : cat.name_en }}</span>
                                     <span class="text-[10px] opacity-60 ml-2">({{ cat.products_count }})</span>
@@ -158,14 +162,14 @@ const clearFilters = () => {
                             <label class="text-xs font-bold uppercase tracking-wider text-[#86868B]">
                                 Brands
                             </label>
-                            <div class="space-y-1 max-h-48 overflow-y-auto pr-1">
+                            <div class="space-y-1 max-h-64 overflow-y-auto d-scrollbar pr-1.5">
                                 <button
                                     v-for="brand in brands"
                                     :key="brand.id"
                                     type="button"
                                     @click="form.brand = (form.brand === brand.slug ? '' : brand.slug); applyFilters()"
-                                    class="w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center justify-between"
-                                    :class="form.brand === brand.slug ? 'bg-[#111111] text-white' : 'text-[#1D1D1F] hover:bg-[#F5F5F7]'"
+                                    class="w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition-[background-color,color] duration-150 flex items-center justify-between cursor-pointer touch-manipulation select-none active:scale-[0.98]"
+                                    :class="form.brand === brand.slug ? 'bg-[#111111] text-white shadow-sm' : 'text-[#1D1D1F] hover:bg-[#F5F5F7]'"
                                 >
                                     <span class="truncate">{{ brand.name }}</span>
                                     <span class="text-[10px] opacity-60 ml-2">({{ brand.products_count }})</span>

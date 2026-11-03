@@ -53,7 +53,7 @@ const onChange = (event: Event) => {
                 :required="required"
                 :disabled="disabled"
                 @change="onChange"
-                class="w-full appearance-none px-4 py-3 bg-white text-[#1D1D1F] text-sm rounded-xl border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#111111] focus:border-[#111111] disabled:bg-[#F5F5F7] disabled:text-[#86868B] disabled:cursor-not-allowed cursor-pointer pr-10"
+                class="w-full appearance-none px-4 py-3 bg-white text-[#1D1D1F] text-base sm:text-sm rounded-xl border transition-[border-color,box-shadow] duration-150 focus:outline-none focus:ring-2 focus:ring-[#111111] focus:border-[#111111] disabled:bg-[#F5F5F7] disabled:text-[#86868B] disabled:cursor-not-allowed cursor-pointer pr-10 d-scrollbar"
                 :class="[
                     error
                         ? 'border-[#DC2626] focus:ring-[#DC2626] focus:border-[#DC2626]'
