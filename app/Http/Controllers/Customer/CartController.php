@@ -49,8 +49,8 @@ class CartController extends Controller
                 'unit_price_khr' => Money::toKhr($item->unit_price, $rate),
                 'quantity' => $item->quantity,
                 'available_stock' => $available,
-                'subtotal' => Money::format(Money::multiply($item->unit_price, $item->quantity)),
-                'subtotal_khr' => Money::toKhr(Money::multiply($item->unit_price, $item->quantity), $rate),
+                'subtotal' => Money::format(Money::of($item->unit_price)->multiply($item->quantity)),
+                'subtotal_khr' => Money::toKhr(Money::of($item->unit_price)->multiply($item->quantity), $rate),
             ];
         });
 

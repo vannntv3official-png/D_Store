@@ -211,18 +211,6 @@ class Money
             return (int) (round($khrAmount / 100) * 100);
         }
 
-        if ($name === 'add') {
-            $a = $arguments[0] instanceof self ? $arguments[0]->getAmount() : number_format((float) $arguments[0], 4, '.', '');
-            $b = $arguments[1] instanceof self ? $arguments[1]->getAmount() : number_format((float) $arguments[1], 4, '.', '');
-            return bcadd($a, $b, 4);
-        }
-
-        if ($name === 'multiply') {
-            $a = $arguments[0] instanceof self ? $arguments[0]->getAmount() : number_format((float) $arguments[0], 4, '.', '');
-            $b = number_format((float) $arguments[1], 4, '.', '');
-            return bcmul($a, $b, 4);
-        }
-
         throw new \BadMethodCallException("Static method [{$name}] does not exist on " . static::class);
     }
 

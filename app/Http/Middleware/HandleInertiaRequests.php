@@ -49,14 +49,14 @@ class HandleInertiaRequests extends Middleware
             $cartService = app(CartService::class);
             $cart = $cartService->getOrCreateCart($request->user(), $request->cookie('dstore_cart_token'));
             $itemCount = $cart->items->sum('quantity');
-            $subtotalUsd = '0.0000';
+            $subtotal = Money::zero();
             foreach ($cart->items as $item) {
-                $subtotalUsd = Money::add($subtotalUsd, Money::multiply($item->unit_price, $item->quantity));
+                $subtotal = $subtotal->add(Money::of($item->unit_price)->multiply($item->quantity));
             }
             $cartSummary = [
                 'item_count' => $itemCount,
-                'subtotal_usd' => Money::format($subtotalUsd),
-                'subtotal_khr' => Money::toKhr($subtotalUsd, $exchangeRate),
+                'subtotal_usd' => Money::format($subtotal),
+                'subtotal_khr' => Money::toKhr($subtotal, $exchangeRate),
             ];
         } catch (\Throwable $e) {
             // Cart loading should never break global page rendering

@@ -61,4 +61,26 @@ class CustomerFlowTest extends TestCase
         $currResponse->assertRedirect();
         $this->assertEquals('KHR', session('currency'));
     }
+
+    public function test_customer_can_load_checkout_with_items_in_cart(): void
+    {
+        $user = \App\Models\User::factory()->create();
+        $product = Product::where('status', 'active')->firstOrFail();
+        $variant = $product->variants()->firstOrFail();
+
+        // Add to cart as authenticated user
+        $this->actingAs($user)->post(route('cart.store'), [
+            'variant_id' => $variant->id,
+            'quantity' => 2,
+        ]);
+
+        // Load checkout
+        $checkoutResponse = $this->actingAs($user)->get(route('checkout.create'));
+        $checkoutResponse->assertStatus(200);
+        $checkoutResponse->assertInertia(fn ($page) => $page
+            ->component('Customer/Checkout')
+            ->has('cartItems')
+            ->has('pricing')
+        );
+    }
 }

@@ -34,4 +34,9 @@ class CartItem extends Model
     {
         return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
+
+    public function getUnitPriceAttribute(): string
+    {
+        return (string) ($this->unit_price_snapshot ?? $this->variant?->price ?? '0.0000');
+    }
 }

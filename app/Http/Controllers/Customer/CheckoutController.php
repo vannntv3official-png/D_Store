@@ -86,8 +86,8 @@ class CheckoutController extends Controller
                 'quantity' => $item->quantity,
                 'price' => Money::format($item->unit_price),
                 'price_khr' => Money::toKhr($item->unit_price, $rate),
-                'subtotal' => Money::format(Money::multiply($item->unit_price, $item->quantity)),
-                'subtotal_khr' => Money::toKhr(Money::multiply($item->unit_price, $item->quantity), $rate),
+                'subtotal' => Money::format(Money::of($item->unit_price)->multiply($item->quantity)),
+                'subtotal_khr' => Money::toKhr(Money::of($item->unit_price)->multiply($item->quantity), $rate),
             ]),
             'pricing' => [
                 'subtotal' => Money::format($pricingResult->subtotal),
