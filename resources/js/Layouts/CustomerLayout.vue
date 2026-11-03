@@ -1,84 +1,151 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Link, usePage, router } from '@inertiajs/vue3';
 import { useTrans } from '@/Composables/useTrans';
 import { 
     Search, ShoppingBag, Heart, User as UserIcon, Menu, X, 
-    Globe, DollarSign, ChevronDown, Check, ShieldCheck, Home, LayoutGrid 
+    Globe, DollarSign, ChevronDown, Check, ShieldCheck, Home, LayoutGrid,
+    Phone, MapPin, SlidersHorizontal, RotateCcw, LogOut, Package, Award, Sparkles, Store
 } from 'lucide-vue-next';
 
-const { t, currentLocale, currentCurrency, setLocale, setCurrency } = useTrans();
+const { t, currentLocale, currentCurrency, exchangeRate, formatPrice, setLocale, setCurrency } = useTrans();
 const page = usePage();
 
 const auth = computed(() => (page.props as any).auth || {});
-const cart = computed(() => (page.props as any).cart || { item_count: 0 });
+const cart = computed(() => (page.props as any).cart || { item_count: 0, subtotal_usd: '0.00', subtotal_khr: 0 });
 const flash = computed(() => (page.props as any).flash || {});
+const settings = computed(() => (page.props as any).settings || {});
+const currentUrl = computed(() => page.url);
 
 const isMobileMenuOpen = ref(false);
 const searchQuery = ref('');
 const isUserDropdownOpen = ref(false);
+const searchInputRef = ref<HTMLInputElement | null>(null);
+const userDropdownRef = ref<HTMLElement | null>(null);
+
+const userInitials = computed(() => {
+    if (!auth.value?.user?.name) return 'D';
+    const parts = auth.value.user.name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return auth.value.user.name.substring(0, 2).toUpperCase();
+});
 
 const handleSearch = () => {
     if (searchQuery.value.trim()) {
         router.visit(`/shop?q=${encodeURIComponent(searchQuery.value.trim())}`);
+        isMobileMenuOpen.value = false;
     }
+};
+
+const clearSearch = () => {
+    searchQuery.value = '';
+    searchInputRef.value?.focus();
 };
 
 const logout = () => {
     router.post('/logout');
+    isUserDropdownOpen.value = false;
 };
+
+const handleClickOutside = (event: MouseEvent) => {
+    if (userDropdownRef.value && !userDropdownRef.value.contains(event.target as Node)) {
+        isUserDropdownOpen.value = false;
+    }
+};
+
+const handleKeyDown = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') {
+        isUserDropdownOpen.value = false;
+        isMobileMenuOpen.value = false;
+    }
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        searchInputRef.value?.focus();
+    }
+};
+
+onMounted(() => {
+    document.addEventListener('click', handleClickOutside);
+    window.addEventListener('keydown', handleKeyDown);
+});
+
+onUnmounted(() => {
+    document.removeEventListener('click', handleClickOutside);
+    window.removeEventListener('keydown', handleKeyDown);
+});
 </script>
 
 <template>
     <div class="min-h-screen flex flex-col bg-[#F5F5F7] text-[#1D1D1F] selection:bg-[#111111] selection:text-white">
-        <!-- Top Utility Bar -->
-        <div class="bg-[#111111] text-[#86868B] text-xs py-2 px-4 sm:px-8 border-b border-white/10">
-            <div class="max-w-7xl mx-auto flex items-center justify-between">
-                <div class="hidden sm:flex items-center gap-6">
-                    <span class="text-white font-medium tracking-wide">D STORE CAMBODIA</span>
-                    <span class="text-white/60">Official Flagship Store • Norodom Blvd, Phnom Penh</span>
+        <!-- Top Luxury Utility Ribbon (NBC Live Rate, Flagship Store & Segmented Controls) -->
+        <div class="bg-[#0B0B0E] text-white/70 text-xs border-b border-white/[0.08] relative z-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-8 py-2 flex items-center justify-between gap-4">
+                <!-- Left: Flagship Store Identity & NBC Live Rate -->
+                <div class="flex items-center gap-4 text-[11px]">
+                    <div class="hidden sm:flex items-center gap-2 font-medium tracking-wide text-white/90">
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse"></span>
+                        <span class="font-bold tracking-tight text-white">D STORE</span>
+                        <span class="text-white/40">•</span>
+                        <span class="text-white/75 truncate">{{ settings.store_address || 'Norodom Blvd, Phnom Penh' }}</span>
+                    </div>
+
+                    <!-- Live NBC Rate Badge -->
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/[0.08] border border-white/10 text-[10.5px] text-white/90 font-medium">
+                        <span class="text-white/60">NBC Rate:</span>
+                        <span class="font-bold text-white">$1 ≈ {{ exchangeRate.toLocaleString() }} KHR</span>
+                    </div>
                 </div>
 
-                <div class="flex items-center gap-4 ml-auto">
-                    <!-- Currency Switcher -->
-                    <div class="flex items-center gap-1.5">
+                <!-- Right: Concierge Hotline & Segmented Pill Switchers -->
+                <div class="flex items-center gap-3 sm:gap-4 ml-auto">
+                    <!-- Concierge Hotline -->
+                    <a
+                        :href="`tel:${settings.store_phone || '+85523888999'}`"
+                        class="hidden md:inline-flex items-center gap-1.5 text-[11px] text-white/70 hover:text-white transition-colors"
+                    >
+                        <Phone class="w-3 h-3 text-[#10B981]" />
+                        <span>Concierge: {{ settings.store_phone || '+855 23 888 999' }}</span>
+                    </a>
+
+                    <span class="hidden md:inline text-white/20">|</span>
+
+                    <!-- Segmented Currency Switcher -->
+                    <div class="inline-flex items-center p-0.5 rounded-lg bg-white/[0.08] border border-white/10">
                         <button
                             type="button"
                             @click="setCurrency('USD')"
-                            class="px-1.5 py-0.5 rounded text-[11px] font-semibold transition-colors cursor-pointer"
-                            :class="currentCurrency === 'USD' ? 'text-white bg-white/20' : 'text-[#86868B] hover:text-white'"
+                            class="px-2 py-0.5 rounded-md text-[10.5px] font-bold transition-all duration-150 cursor-pointer touch-manipulation"
+                            :class="currentCurrency === 'USD' ? 'bg-white text-[#111111] shadow-2xs' : 'text-white/70 hover:text-white'"
                         >
                             USD ($)
                         </button>
-                        <span class="text-white/20">|</span>
                         <button
                             type="button"
                             @click="setCurrency('KHR')"
-                            class="px-1.5 py-0.5 rounded text-[11px] font-semibold transition-colors cursor-pointer"
-                            :class="currentCurrency === 'KHR' ? 'text-white bg-white/20' : 'text-[#86868B] hover:text-white'"
+                            class="px-2 py-0.5 rounded-md text-[10.5px] font-bold transition-all duration-150 cursor-pointer touch-manipulation"
+                            :class="currentCurrency === 'KHR' ? 'bg-white text-[#111111] shadow-2xs' : 'text-white/70 hover:text-white'"
                         >
                             KHR (៛)
                         </button>
                     </div>
 
-                    <span class="text-white/20">|</span>
-
-                    <!-- Language Switcher -->
-                    <div class="flex items-center gap-1.5">
+                    <!-- Segmented Language Switcher -->
+                    <div class="inline-flex items-center p-0.5 rounded-lg bg-white/[0.08] border border-white/10">
                         <button
                             type="button"
                             @click="setLocale('km')"
-                            class="px-1.5 py-0.5 rounded text-[11px] font-semibold transition-colors cursor-pointer"
-                            :class="currentLocale === 'km' ? 'text-white bg-white/20' : 'text-[#86868B] hover:text-white'"
+                            class="px-2 py-0.5 rounded-md text-[10.5px] font-bold transition-all duration-150 cursor-pointer touch-manipulation"
+                            :class="currentLocale === 'km' ? 'bg-white text-[#111111] shadow-2xs' : 'text-white/70 hover:text-white'"
                         >
                             ភាសាខ្មែរ
                         </button>
-                        <span class="text-white/20">|</span>
                         <button
                             type="button"
                             @click="setLocale('en')"
-                            class="px-1.5 py-0.5 rounded text-[11px] font-semibold transition-colors cursor-pointer"
-                            :class="currentLocale === 'en' ? 'text-white bg-white/20' : 'text-[#86868B] hover:text-white'"
+                            class="px-2 py-0.5 rounded-md text-[10.5px] font-bold transition-all duration-150 cursor-pointer touch-manipulation"
+                            :class="currentLocale === 'en' ? 'bg-white text-[#111111] shadow-2xs' : 'text-white/70 hover:text-white'"
                         >
                             English
                         </button>
@@ -87,149 +154,273 @@ const logout = () => {
             </div>
         </div>
 
-        <!-- Sticky Luxury Header -->
-        <header class="sticky top-0 z-40 bg-white/85 backdrop-blur-xl saturate-180 border-b border-black/5 transition-all pt-[env(safe-area-inset-top)]">
-            <div class="max-w-7xl mx-auto px-4 sm:px-8 h-18 flex items-center justify-between gap-4">
-                <!-- Mobile Menu Button -->
+        <!-- Sticky Luxury Header Bar -->
+        <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-2xl border-b border-black/[0.06] shadow-[0_4px_24px_-4px_rgba(0,0,0,0.03)] transition-all pt-[env(safe-area-inset-top)]">
+            <div class="max-w-7xl mx-auto px-4 sm:px-8 h-20 flex items-center justify-between gap-4">
+                <!-- Mobile Menu Trigger -->
                 <button
                     type="button"
-                    class="lg:hidden p-2 text-[#1D1D1F] hover:text-black focus:outline-none touch-manipulation cursor-pointer active:scale-95"
+                    class="lg:hidden w-10 h-10 rounded-xl flex items-center justify-center text-[#111111] hover:bg-[#F5F5F7] transition-all touch-manipulation cursor-pointer active:scale-95"
                     @click="isMobileMenuOpen = !isMobileMenuOpen"
+                    aria-label="Toggle navigation menu"
                 >
-                    <Menu v-if="!isMobileMenuOpen" class="w-6 h-6" />
-                    <X v-else class="w-6 h-6" />
+                    <Menu v-if="!isMobileMenuOpen" class="w-5 h-5" />
+                    <X v-else class="w-5 h-5" />
                 </button>
 
-                <!-- Brand Logo -->
-                <Link href="/" class="flex items-center gap-2 group">
-                    <span class="text-xl font-black tracking-tight text-[#111111] group-hover:opacity-80 transition-opacity">
-                        D STORE
-                    </span>
-                    <span class="text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full bg-[#111111] text-white">
-                        KH
-                    </span>
+                <!-- Luxury Brand Emblem & Title -->
+                <Link href="/" class="flex items-center gap-3 group shrink-0">
+                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#111111] via-[#222226] to-[#38383F] text-white flex items-center justify-center font-black text-xl tracking-tighter shadow-md ring-1 ring-black/10 transition-transform duration-200 group-hover:scale-105">
+                        D
+                    </div>
+                    <div class="flex flex-col">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-xl font-black tracking-tight text-[#111111] group-hover:text-black transition-colors">
+                                D STORE
+                            </span>
+                            <span class="text-[9px] font-extrabold uppercase tracking-widest px-1.5 py-0.5 rounded-md bg-[#111111] text-white leading-none">
+                                KH
+                            </span>
+                        </div>
+                        <span class="text-[9.5px] font-semibold uppercase tracking-widest text-[#86868B] group-hover:text-[#111111] transition-colors">
+                            Luxury Flagship
+                        </span>
+                    </div>
                 </Link>
 
-                <!-- Desktop Navigation Links -->
-                <nav class="hidden lg:flex items-center gap-8 text-sm font-medium text-[#1D1D1F]">
-                    <Link href="/shop" class="hover:text-[#0071E3] transition-colors">
+                <!-- Desktop Navigation Pill Menu -->
+                <nav class="hidden lg:flex items-center gap-1 text-xs font-semibold">
+                    <Link
+                        href="/"
+                        class="px-3.5 py-2 rounded-xl transition-all duration-150"
+                        :class="currentUrl === '/' ? 'bg-[#111111] text-white shadow-xs' : 'text-[#48484A] hover:bg-[#F5F5F7] hover:text-[#111111]'"
+                    >
+                        {{ t('nav.home') }}
+                    </Link>
+                    <Link
+                        href="/shop"
+                        class="px-3.5 py-2 rounded-xl transition-all duration-150"
+                        :class="currentUrl === '/shop' ? 'bg-[#111111] text-white shadow-xs' : 'text-[#48484A] hover:bg-[#F5F5F7] hover:text-[#111111]'"
+                    >
                         {{ t('nav.shop') }}
                     </Link>
-                    <Link href="/shop?category=smartphones" class="hover:text-[#0071E3] transition-colors">
+                    <Link
+                        href="/shop?category=smartphones"
+                        class="px-3.5 py-2 rounded-xl transition-all duration-150"
+                        :class="currentUrl.includes('category=smartphones') ? 'bg-[#111111] text-white shadow-xs' : 'text-[#48484A] hover:bg-[#F5F5F7] hover:text-[#111111]'"
+                    >
                         Smartphones
                     </Link>
-                    <Link href="/shop?category=electronics" class="hover:text-[#0071E3] transition-colors">
+                    <Link
+                        href="/shop?category=electronics"
+                        class="px-3.5 py-2 rounded-xl transition-all duration-150"
+                        :class="currentUrl.includes('category=electronics') ? 'bg-[#111111] text-white shadow-xs' : 'text-[#48484A] hover:bg-[#F5F5F7] hover:text-[#111111]'"
+                    >
                         Electronics
                     </Link>
-                    <Link href="/shop?category=fashion-clothing" class="hover:text-[#0071E3] transition-colors">
+                    <Link
+                        href="/shop?category=fashion-clothing"
+                        class="px-3.5 py-2 rounded-xl transition-all duration-150"
+                        :class="currentUrl.includes('category=fashion-clothing') ? 'bg-[#111111] text-white shadow-xs' : 'text-[#48484A] hover:bg-[#F5F5F7] hover:text-[#111111]'"
+                    >
                         Fashion
                     </Link>
-                    <Link href="/shop?category=vehicles-automotive" class="hover:text-[#0071E3] transition-colors">
-                        Vehicles
-                    </Link>
-                    <Link href="/pages/about-us" class="hover:text-[#0071E3] transition-colors">
+                    <Link
+                        href="/pages/about-us"
+                        class="px-3.5 py-2 rounded-xl transition-all duration-150"
+                        :class="currentUrl.startsWith('/pages/about') ? 'bg-[#111111] text-white shadow-xs' : 'text-[#48484A] hover:bg-[#F5F5F7] hover:text-[#111111]'"
+                    >
                         {{ t('nav.about') }}
                     </Link>
                 </nav>
 
-                <!-- Search Input -->
-                <div class="hidden md:flex flex-1 max-w-xs relative">
-                    <form @submit.prevent="handleSearch" class="w-full">
+                <!-- Expanding Luxury Search Bar -->
+                <div class="hidden md:flex items-center relative">
+                    <form @submit.prevent="handleSearch" class="relative flex items-center transition-all duration-300 w-44 lg:w-56 focus-within:w-64 lg:focus-within:w-76">
+                        <Search class="w-4 h-4 text-[#86868B] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                         <input
+                            ref="searchInputRef"
                             v-model="searchQuery"
-                            type="search"
+                            type="text"
                             :placeholder="t('nav.search_placeholder')"
-                            class="w-full pl-9 pr-4 py-2 bg-[#F5F5F7] rounded-full text-xs text-[#1D1D1F] border border-transparent focus:border-[#111111] focus:bg-white focus:outline-none transition-all placeholder-[#86868B]"
+                            class="w-full pl-9 pr-9 py-2 bg-[#F5F5F7] hover:bg-[#EFEFF2] focus:bg-white rounded-full text-xs text-[#1D1D1F] border border-[#E5E5EA] focus:border-[#111111] focus:ring-2 focus:ring-black/5 focus:outline-none transition-all placeholder-[#86868B]"
                         />
-                        <Search class="w-4 h-4 text-[#86868B] absolute left-3 top-2.5" />
+                        <!-- Clear button if text entered -->
+                        <button
+                            v-if="searchQuery"
+                            type="button"
+                            @click="clearSearch"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-black/10 text-[#86868B] hover:text-[#111111] cursor-pointer"
+                        >
+                            <X class="w-3.5 h-3.5" />
+                        </button>
+                        <!-- Keyboard shortcut indicator if empty -->
+                        <span
+                            v-else
+                            class="hidden xl:inline-flex items-center px-1.5 py-0.5 text-[9.5px] font-bold text-[#86868B] bg-white border border-[#E5E5EA] rounded shadow-2xs absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
+                        >
+                            ⌘K
+                        </span>
                     </form>
                 </div>
 
-                <!-- Right Utility Icons -->
-                <div class="flex items-center gap-3">
-                    <!-- Wishlist -->
+                <!-- Right Actions: Wishlist, Shopping Bag, User Account -->
+                <div class="flex items-center gap-2 sm:gap-2.5">
+                    <!-- Wishlist Icon -->
                     <Link
                         v-if="auth.user"
                         href="/account/wishlist"
-                        class="p-2 text-[#1D1D1F] hover:text-black hover:bg-[#F5F5F7] rounded-full transition-[transform,background-color,color] duration-150 active:scale-95 touch-manipulation relative"
+                        class="w-10 h-10 rounded-xl flex items-center justify-center text-[#1D1D1F] hover:text-black hover:bg-[#F5F5F7] transition-all touch-manipulation relative active:scale-95"
                         :aria-label="t('nav.wishlist')"
                     >
                         <Heart class="w-5 h-5" />
                     </Link>
 
-                    <!-- Cart Bag -->
+                    <!-- Shopping Bag -->
                     <Link
                         href="/cart"
-                        class="p-2 text-[#1D1D1F] hover:text-black hover:bg-[#F5F5F7] rounded-full transition-[transform,background-color,color] duration-150 active:scale-95 touch-manipulation relative"
+                        class="group flex items-center gap-2 h-10 px-3 rounded-xl hover:bg-[#F5F5F7] transition-all touch-manipulation relative active:scale-95 text-[#1D1D1F] hover:text-black"
                         :aria-label="t('nav.cart')"
                     >
-                        <ShoppingBag class="w-5 h-5" />
-                        <span
-                            v-if="cart.item_count > 0"
-                            class="absolute top-0 right-0 w-4 h-4 bg-[#111111] text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse"
-                        >
-                            {{ cart.item_count }}
+                        <div class="relative flex items-center justify-center">
+                            <ShoppingBag class="w-5 h-5 transition-transform group-hover:scale-105" />
+                            <span
+                                v-if="cart.item_count > 0"
+                                class="absolute -top-1.5 -right-2 min-w-4 h-4 px-1 bg-[#111111] text-white text-[9.5px] font-black rounded-full flex items-center justify-center shadow-xs animate-pulse"
+                            >
+                                {{ cart.item_count }}
+                            </span>
+                        </div>
+                        <!-- Cart Subtotal Preview for Desktop -->
+                        <span v-if="cart.item_count > 0" class="hidden sm:inline text-xs font-bold text-[#111111]">
+                            {{ formatPrice(cart.subtotal_usd) }}
                         </span>
                     </Link>
 
                     <!-- User Account Dropdown -->
-                    <div class="relative">
+                    <div ref="userDropdownRef" class="relative">
+                        <!-- Logged In Button: Avatar + Name + Chevron -->
                         <button
+                            v-if="auth.user"
                             type="button"
                             @click="isUserDropdownOpen = !isUserDropdownOpen"
-                            class="flex items-center gap-1.5 p-2 text-[#1D1D1F] hover:text-black hover:bg-[#F5F5F7] rounded-full transition-[transform,background-color,color] duration-150 active:scale-95 touch-manipulation cursor-pointer"
+                            class="flex items-center gap-2 p-1.5 sm:px-2 sm:py-1.5 rounded-xl hover:bg-[#F5F5F7] transition-all active:scale-95 cursor-pointer select-none"
+                            :class="isUserDropdownOpen ? 'bg-[#F5F5F7]' : ''"
                         >
-                            <UserIcon class="w-5 h-5" />
-                            <span v-if="auth.user" class="text-xs font-semibold max-w-[80px] truncate hidden sm:inline">
-                                {{ auth.user.name }}
-                            </span>
+                            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-[#111111] via-[#222226] to-[#3E3E46] text-white font-bold text-xs flex items-center justify-center shadow-xs ring-2 ring-white">
+                                {{ userInitials }}
+                            </div>
+                            <div class="hidden sm:flex flex-col text-left leading-none">
+                                <span class="text-xs font-bold text-[#111111] max-w-[85px] truncate">
+                                    {{ auth.user.name }}
+                                </span>
+                                <span class="text-[9px] font-semibold text-[#86868B] mt-0.5">
+                                    {{ auth.is_staff ? 'Merchant' : 'Member' }}
+                                </span>
+                            </div>
+                            <ChevronDown class="w-3.5 h-3.5 text-[#86868B] transition-transform duration-200 hidden sm:block" :class="isUserDropdownOpen ? 'rotate-180 text-[#111111]' : ''" />
                         </button>
 
-                        <!-- Dropdown Menu (Origin-aware entrance) -->
+                        <!-- Guest Buttons: Sign In / Register -->
+                        <div v-else class="flex items-center gap-1.5">
+                            <Link
+                                href="/login"
+                                class="px-3 py-2 text-xs font-bold text-[#111111] hover:bg-[#F5F5F7] rounded-xl transition-all cursor-pointer"
+                            >
+                                {{ t('nav.login') }}
+                            </Link>
+                            <Link
+                                href="/register"
+                                class="hidden sm:inline-flex items-center px-3.5 py-2 text-xs font-bold text-white bg-[#111111] hover:bg-black rounded-xl shadow-xs transition-all active:scale-95 cursor-pointer"
+                            >
+                                {{ t('nav.register') }}
+                            </Link>
+                        </div>
+
+                        <!-- Floating Luxury Dropdown Card -->
                         <div
                             v-if="isUserDropdownOpen"
-                            @click="isUserDropdownOpen = false"
-                            class="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-[#E5E5EA] py-2 z-50 origin-top-right transform transition-[transform,opacity] duration-150 ease-out animate-in fade-in zoom-in-95"
+                            class="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-2xl border border-[#E5E5EA] py-2 z-50 origin-top-right transform transition-all duration-150 ease-out animate-in fade-in zoom-in-95"
                         >
                             <template v-if="auth.user">
-                                <div class="px-4 py-2 border-b border-[#F5F5F7]">
-                                    <p class="text-xs font-semibold text-[#111111]">{{ auth.user.name }}</p>
-                                    <p class="text-[11px] text-[#86868B] truncate">{{ auth.user.phone || auth.user.email }}</p>
+                                <!-- Profile Header Card -->
+                                <div class="px-4 py-3 border-b border-[#F5F5F7] bg-gradient-to-b from-[#FAFAFA] to-white rounded-t-2xl">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-[#111111] to-[#383840] text-white font-bold text-sm flex items-center justify-center shadow-xs">
+                                            {{ userInitials }}
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-xs font-bold text-[#111111] truncate">{{ auth.user.name }}</p>
+                                            <p class="text-[10.5px] text-[#86868B] truncate">{{ auth.user.phone || auth.user.email }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2.5 flex items-center justify-between text-[10px] text-[#86868B]">
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#F5F5F7] font-semibold text-[#111111]">
+                                            <Award class="w-3 h-3 text-[#D4AF37]" />
+                                            VIP Club
+                                        </span>
+                                        <span v-if="auth.is_staff" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#DCFCE7] text-[#166534] font-bold">
+                                            <ShieldCheck class="w-3 h-3" />
+                                            Staff
+                                        </span>
+                                    </div>
                                 </div>
-                                <Link href="/account/profile" class="block px-4 py-2 text-xs text-[#1D1D1F] hover:bg-[#F5F5F7]">
-                                    {{ t('account.profile') }}
-                                </Link>
-                                <Link href="/account/orders" class="block px-4 py-2 text-xs text-[#1D1D1F] hover:bg-[#F5F5F7]">
-                                    {{ t('nav.orders') }}
-                                </Link>
-                                <Link href="/account/loyalty" class="block px-4 py-2 text-xs text-[#1D1D1F] hover:bg-[#F5F5F7]">
-                                    {{ t('nav.loyalty') }}
-                                </Link>
-                                <Link v-if="auth.is_staff" href="/admin" class="block px-4 py-2 text-xs font-semibold text-[#0071E3] hover:bg-[#F5F5F7]">
-                                    {{ t('nav.admin') }}
-                                </Link>
-                                <div class="border-t border-[#F5F5F7] mt-1 pt-1">
+
+                                <!-- Menu Items -->
+                                <div class="py-1">
+                                    <Link
+                                        href="/account/profile"
+                                        @click="isUserDropdownOpen = false"
+                                        class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors"
+                                    >
+                                        <UserIcon class="w-4 h-4 text-[#86868B]" />
+                                        <span>{{ t('account.profile') }}</span>
+                                    </Link>
+                                    <Link
+                                        href="/account/orders"
+                                        @click="isUserDropdownOpen = false"
+                                        class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors"
+                                    >
+                                        <Package class="w-4 h-4 text-[#86868B]" />
+                                        <span>{{ t('nav.orders') }}</span>
+                                    </Link>
+                                    <Link
+                                        href="/account/loyalty"
+                                        @click="isUserDropdownOpen = false"
+                                        class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors"
+                                    >
+                                        <Award class="w-4 h-4 text-[#86868B]" />
+                                        <span>{{ t('nav.loyalty') }}</span>
+                                    </Link>
+                                    <Link
+                                        href="/account/wishlist"
+                                        @click="isUserDropdownOpen = false"
+                                        class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors"
+                                    >
+                                        <Heart class="w-4 h-4 text-[#86868B]" />
+                                        <span>{{ t('nav.wishlist') }}</span>
+                                    </Link>
+                                    <Link
+                                        v-if="auth.is_staff"
+                                        href="/admin"
+                                        @click="isUserDropdownOpen = false"
+                                        class="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-[#0071E3] hover:bg-[#EFF6FF] transition-colors"
+                                    >
+                                        <ShieldCheck class="w-4 h-4 text-[#0071E3]" />
+                                        <span>{{ t('nav.admin') }}</span>
+                                    </Link>
+                                </div>
+
+                                <!-- Logout -->
+                                <div class="border-t border-[#F5F5F7] pt-1">
                                     <button
                                         type="button"
                                         @click="logout"
-                                        class="w-full text-left px-4 py-2 text-xs text-[#DC2626] hover:bg-[#FEE2E2]"
+                                        class="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-[#DC2626] hover:bg-[#FEE2E2] transition-colors cursor-pointer"
                                     >
-                                        {{ t('nav.logout') }}
+                                        <LogOut class="w-4 h-4 text-[#DC2626]" />
+                                        <span>{{ t('nav.logout') }}</span>
                                     </button>
-                                </div>
-                            </template>
-
-                            <template v-else>
-                                <Link href="/login" class="block px-4 py-2 text-xs font-semibold text-[#111111] hover:bg-[#F5F5F7]">
-                                    {{ t('nav.login') }}
-                                </Link>
-                                <Link href="/register" class="block px-4 py-2 text-xs text-[#1D1D1F] hover:bg-[#F5F5F7]">
-                                    {{ t('nav.register') }}
-                                </Link>
-                                <div class="border-t border-[#F5F5F7] mt-1 pt-1">
-                                    <Link href="/admin/login" class="block px-4 py-2 text-[11px] text-[#86868B] hover:text-[#111111]">
-                                        {{ t('nav.admin') }}
-                                    </Link>
                                 </div>
                             </template>
                         </div>
@@ -237,41 +428,145 @@ const logout = () => {
                 </div>
             </div>
 
-            <!-- Mobile Navigation Drawer -->
-            <div v-if="isMobileMenuOpen" class="lg:hidden bg-white border-t border-[#E5E5EA] px-6 py-4 space-y-4">
+            <!-- Mobile Slide-Down Drawer -->
+            <div v-if="isMobileMenuOpen" class="lg:hidden bg-white/98 backdrop-blur-2xl border-t border-[#E5E5EA] px-5 py-5 space-y-5 animate-in slide-in-from-top-4 duration-200">
+                <!-- Mobile Search Bar -->
                 <form @submit.prevent="handleSearch" class="relative">
                     <input
                         v-model="searchQuery"
-                        type="search"
+                        type="text"
                         :placeholder="t('nav.search_placeholder')"
-                        class="w-full pl-9 pr-4 py-2.5 bg-[#F5F5F7] rounded-xl text-xs text-[#1D1D1F] border border-transparent focus:border-[#111111] focus:bg-white focus:outline-none"
+                        class="w-full pl-9 pr-9 py-2.5 bg-[#F5F5F7] rounded-xl text-xs text-[#1D1D1F] border border-[#E5E5EA] focus:border-[#111111] focus:bg-white focus:outline-none"
                     />
                     <Search class="w-4 h-4 text-[#86868B] absolute left-3 top-3" />
+                    <button
+                        v-if="searchQuery"
+                        type="button"
+                        @click="searchQuery = ''"
+                        class="absolute right-3 top-3 p-0.5 rounded-full hover:bg-black/10 text-[#86868B]"
+                    >
+                        <X class="w-3.5 h-3.5" />
+                    </button>
                 </form>
 
-                <nav class="flex flex-col space-y-2 text-sm font-medium">
-                    <Link href="/shop" class="py-2 hover:text-[#0071E3]">
-                        {{ t('nav.shop') }}
+                <!-- Quick Category Chips -->
+                <div class="space-y-2">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-[#86868B]">
+                        {{ t('nav.categories') }}
+                    </span>
+                    <div class="flex flex-wrap gap-2">
+                        <Link
+                            href="/shop?category=smartphones"
+                            @click="isMobileMenuOpen = false"
+                            class="px-3 py-1.5 rounded-lg bg-[#F5F5F7] hover:bg-[#111111] hover:text-white text-xs font-medium transition-colors"
+                        >
+                            Smartphones
+                        </Link>
+                        <Link
+                            href="/shop?category=electronics"
+                            @click="isMobileMenuOpen = false"
+                            class="px-3 py-1.5 rounded-lg bg-[#F5F5F7] hover:bg-[#111111] hover:text-white text-xs font-medium transition-colors"
+                        >
+                            Electronics
+                        </Link>
+                        <Link
+                            href="/shop?category=fashion-clothing"
+                            @click="isMobileMenuOpen = false"
+                            class="px-3 py-1.5 rounded-lg bg-[#F5F5F7] hover:bg-[#111111] hover:text-white text-xs font-medium transition-colors"
+                        >
+                            Fashion
+                        </Link>
+                        <Link
+                            href="/shop?category=vehicles-automotive"
+                            @click="isMobileMenuOpen = false"
+                            class="px-3 py-1.5 rounded-lg bg-[#F5F5F7] hover:bg-[#111111] hover:text-white text-xs font-medium transition-colors"
+                        >
+                            Vehicles
+                        </Link>
+                    </div>
+                </div>
+
+                <!-- Main Navigation Links -->
+                <nav class="flex flex-col space-y-1 text-sm font-semibold divide-y divide-[#F5F5F7]">
+                    <Link
+                        href="/"
+                        @click="isMobileMenuOpen = false"
+                        class="py-2.5 flex items-center justify-between text-[#111111] hover:text-[#0071E3]"
+                    >
+                        <span>{{ t('nav.home') }}</span>
                     </Link>
-                    <Link href="/shop?category=smartphones" class="py-2 hover:text-[#0071E3]">
-                        Smartphones
+                    <Link
+                        href="/shop"
+                        @click="isMobileMenuOpen = false"
+                        class="py-2.5 flex items-center justify-between text-[#111111] hover:text-[#0071E3]"
+                    >
+                        <span>{{ t('nav.shop') }}</span>
                     </Link>
-                    <Link href="/shop?category=electronics" class="py-2 hover:text-[#0071E3]">
-                        Electronics
+                    <Link
+                        href="/pages/about-us"
+                        @click="isMobileMenuOpen = false"
+                        class="py-2.5 flex items-center justify-between text-[#111111] hover:text-[#0071E3]"
+                    >
+                        <span>{{ t('nav.about') }}</span>
                     </Link>
-                    <Link href="/shop?category=fashion-clothing" class="py-2 hover:text-[#0071E3]">
-                        Fashion
+                    <Link
+                        href="/contact"
+                        @click="isMobileMenuOpen = false"
+                        class="py-2.5 flex items-center justify-between text-[#111111] hover:text-[#0071E3]"
+                    >
+                        <span>{{ t('nav.contact') }}</span>
                     </Link>
-                    <Link href="/shop?category=vehicles-automotive" class="py-2 hover:text-[#0071E3]">
-                        Vehicles & Motorcycles
-                    </Link>
-                    <Link href="/pages/about-us" class="py-2 hover:text-[#0071E3]">
-                        {{ t('nav.about') }}
-                    </Link>
-                    <Link href="/contact" class="py-2 hover:text-[#0071E3]">
-                        {{ t('nav.contact') }}
+                    <Link
+                        v-if="!auth.user"
+                        href="/login"
+                        @click="isMobileMenuOpen = false"
+                        class="py-2.5 flex items-center justify-between text-[#111111] font-bold"
+                    >
+                        <span>{{ t('nav.login') }}</span>
                     </Link>
                 </nav>
+
+                <!-- Mobile Language & Currency Quick Switcher -->
+                <div class="pt-2 border-t border-[#E5E5EA] flex items-center justify-between gap-3 text-xs">
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-[11px] text-[#86868B]">Currency:</span>
+                        <button
+                            type="button"
+                            @click="setCurrency('USD')"
+                            class="px-2 py-1 rounded text-xs font-bold"
+                            :class="currentCurrency === 'USD' ? 'bg-[#111111] text-white' : 'bg-[#F5F5F7] text-[#1D1D1F]'"
+                        >
+                            USD ($)
+                        </button>
+                        <button
+                            type="button"
+                            @click="setCurrency('KHR')"
+                            class="px-2 py-1 rounded text-xs font-bold"
+                            :class="currentCurrency === 'KHR' ? 'bg-[#111111] text-white' : 'bg-[#F5F5F7] text-[#1D1D1F]'"
+                        >
+                            KHR (៛)
+                        </button>
+                    </div>
+
+                    <div class="flex items-center gap-1.5">
+                        <button
+                            type="button"
+                            @click="setLocale('km')"
+                            class="px-2 py-1 rounded text-xs font-bold"
+                            :class="currentLocale === 'km' ? 'bg-[#111111] text-white' : 'bg-[#F5F5F7] text-[#1D1D1F]'"
+                        >
+                            ខ្មែរ
+                        </button>
+                        <button
+                            type="button"
+                            @click="setLocale('en')"
+                            class="px-2 py-1 rounded text-xs font-bold"
+                            :class="currentLocale === 'en' ? 'bg-[#111111] text-white' : 'bg-[#F5F5F7] text-[#1D1D1F]'"
+                        >
+                            EN
+                        </button>
+                    </div>
+                </div>
             </div>
         </header>
 
