@@ -7,7 +7,7 @@ import Input from '@/Components/Input.vue';
 import Select from '@/Components/Select.vue';
 import Dialog from '@/Components/Dialog.vue';
 import Badge from '@/Components/Badge.vue';
-import { Plus, Tag, Image, Trash2, Power, Zap } from 'lucide-vue-next';
+import { Plus, Tag, Image, Trash2, Power, Zap, Pencil, ExternalLink, Eye } from 'lucide-vue-next';
 
 interface CouponItem {
     id: number;
@@ -109,6 +109,39 @@ const bannerForm = ref<BannerFormData>({
     is_active: true,
 });
 
+// Edit Banner Modal
+const showEditBannerModal = ref(false);
+const editingBannerId = ref<number | null>(null);
+const isSubmittingEditBanner = ref(false);
+const editBannerErrors = ref<Record<string, string>>({});
+
+const editBannerForm = ref<BannerFormData>({
+    title_en: '',
+    title_km: '',
+    subtitle_en: '',
+    subtitle_km: '',
+    link_url: '/shop',
+    image_url: '',
+    display_order: 1,
+    is_active: true,
+});
+
+const openEditBanner = (b: BannerItem) => {
+    editingBannerId.value = b.id;
+    editBannerForm.value = {
+        title_en: b.title_en,
+        title_km: b.title_km,
+        subtitle_en: b.subtitle_en || '',
+        subtitle_km: b.subtitle_km || '',
+        link_url: b.link_url,
+        image_url: b.image_url,
+        display_order: b.display_order,
+        is_active: b.is_active,
+    };
+    editBannerErrors.value = {};
+    showEditBannerModal.value = true;
+};
+
 const submitBanner = () => {
     isSubmittingBanner.value = true;
     bannerErrors.value = {};
@@ -129,6 +162,29 @@ const submitBanner = () => {
             isSubmittingBanner.value = false;
         },
     });
+};
+
+const submitEditBanner = () => {
+    if (!editingBannerId.value) return;
+    isSubmittingEditBanner.value = true;
+    editBannerErrors.value = {};
+
+    router.put(`/admin/marketing/banners/${editingBannerId.value}`, editBannerForm.value, {
+        onSuccess: () => {
+            showEditBannerModal.value = false;
+            editingBannerId.value = null;
+        },
+        onError: (err) => {
+            editBannerErrors.value = err;
+        },
+        onFinish: () => {
+            isSubmittingEditBanner.value = false;
+        },
+    });
+};
+
+const toggleBanner = (id: number) => {
+    router.post(`/admin/marketing/banners/${id}/toggle`);
 };
 
 const deleteBanner = (id: number) => {
@@ -279,44 +335,87 @@ const deleteBanner = (id: number) => {
             <!-- Banners Tab -->
             <div v-if="activeTab === 'banners'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div v-if="banners.length === 0" class="col-span-full bg-white rounded-3xl p-12 text-center border border-[#E5E5EA]">
-                    <p class="text-xs text-[#86868B]">No hero banners created yet.</p>
+                    <p class="text-xs text-[#86868B]">No hero showcase banners created yet.</p>
                 </div>
                 <div
                     v-for="b in banners"
                     :key="b.id"
-                    class="bg-white rounded-2xl border border-[#E5E5EA] overflow-hidden shadow-sm flex flex-col justify-between"
+                    class="bg-white rounded-3xl border border-[#E5E5EA] overflow-hidden shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow"
                 >
-                    <div class="aspect-video bg-[#F5F5F7] relative overflow-hidden">
-                        <img :src="b.image_url" :alt="b.title_en" class="w-full h-full object-cover" />
+                    <div class="aspect-[16/9] bg-[#0A0A0C] relative overflow-hidden group">
+                        <img 
+                            :src="b.image_url" 
+                            :alt="b.title_en" 
+                            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                            @error="(e: any) => e.target.style.display = 'none'" 
+                        />
+                        
+                        <!-- Status Badge -->
                         <span
                             :class="[
-                                'absolute top-3 left-3 px-2.5 py-0.5 rounded-full text-[10px] font-bold',
-                                b.is_active ? 'bg-emerald-500 text-white' : 'bg-[#111111]/70 text-white'
+                                'absolute top-3 left-3 px-2.5 py-0.5 rounded-full text-[10px] font-bold shadow-xs',
+                                b.is_active ? 'bg-emerald-600 text-white' : 'bg-[#111111]/80 backdrop-blur-md text-white'
                             ]"
                         >
                             {{ b.is_active ? 'ACTIVE' : 'DRAFT' }}
                         </span>
-                        <span class="absolute top-3 right-3 px-2 py-0.5 rounded-md bg-white/80 backdrop-blur-md text-[10px] font-mono text-[#111111]">
+
+                        <!-- Order Badge -->
+                        <span class="absolute top-3 right-3 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-md text-[10px] font-mono font-bold text-white border border-white/10">
                             Order: #{{ b.display_order }}
                         </span>
+
+                        <!-- Overlay Text Preview -->
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                            <a :href="b.link_url" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-[#111111] text-xs font-bold hover:bg-[#F5F5F7] shadow-sm">
+                                <span>Preview Link</span>
+                                <ExternalLink class="w-3.5 h-3.5" />
+                            </a>
+                        </div>
                     </div>
 
-                    <div class="p-5 flex-1 flex flex-col justify-between">
+                    <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
                         <div>
-                            <h3 class="text-sm font-bold text-[#111111]">{{ b.title_en }}</h3>
-                            <p class="text-xs text-[#86868B] mt-0.5">{{ b.title_km }}</p>
-                            <p v-if="b.subtitle_en" class="text-xs text-[#1D1D1F] mt-2 italic">{{ b.subtitle_en }}</p>
+                            <div class="flex items-start justify-between gap-2">
+                                <h3 class="text-sm font-bold text-[#111111]">{{ b.title_en }}</h3>
+                                <span class="text-xs font-bold text-[#86868B]">#{{ b.id }}</span>
+                            </div>
+                            <p class="text-xs text-[#86868B] mt-0.5 font-khmer">{{ b.title_km }}</p>
+                            <p v-if="b.subtitle_en" class="text-xs text-[#1D1D1F] mt-2 line-clamp-2">{{ b.subtitle_en }}</p>
+                            <p v-if="b.subtitle_km" class="text-xs text-[#86868B] font-khmer line-clamp-2 mt-0.5">{{ b.subtitle_km }}</p>
                         </div>
 
-                        <div class="mt-4 pt-3 border-t border-[#F5F5F7] flex items-center justify-between">
-                            <span class="text-[11px] text-[#0071E3] font-mono truncate max-w-[180px]">{{ b.link_url }}</span>
+                        <div class="pt-3 border-t border-[#F5F5F7] flex items-center justify-between gap-2">
+                            <!-- Toggle Active Button -->
                             <button
-                                @click="deleteBanner(b.id)"
-                                class="text-[#86868B] hover:text-[#DC2626] p-1.5 rounded-lg hover:bg-[#F5F5F7] transition-colors"
-                                title="Remove banner"
+                                type="button"
+                                @click="toggleBanner(b.id)"
+                                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                                :class="b.is_active ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
                             >
-                                <Trash2 class="w-4 h-4" />
+                                <Power class="w-3.5 h-3.5" />
+                                <span>{{ b.is_active ? 'Active' : 'Draft' }}</span>
                             </button>
+
+                            <!-- Action Buttons -->
+                            <div class="flex items-center gap-1">
+                                <button
+                                    type="button"
+                                    @click="openEditBanner(b)"
+                                    class="p-1.5 rounded-lg text-[#86868B] hover:text-[#111111] hover:bg-[#F5F5F7] transition-colors cursor-pointer"
+                                    title="Edit banner"
+                                >
+                                    <Pencil class="w-4 h-4" />
+                                </button>
+                                <button
+                                    type="button"
+                                    @click="deleteBanner(b.id)"
+                                    class="p-1.5 rounded-lg text-[#86868B] hover:text-[#DC2626] hover:bg-[#FEE2E2] transition-colors cursor-pointer"
+                                    title="Delete banner"
+                                >
+                                    <Trash2 class="w-4 h-4" />
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -444,6 +543,16 @@ const deleteBanner = (id: number) => {
                     required
                 />
 
+                <!-- Live Image Preview -->
+                <div v-if="bannerForm.image_url" class="rounded-2xl overflow-hidden aspect-[16/9] bg-[#0A0A0C] relative border border-[#E5E5EA]">
+                    <img :src="bannerForm.image_url" class="w-full h-full object-cover" @error="(e: any) => e.target.style.display = 'none'" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 flex flex-col justify-end text-white">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-white/70">Live Banner Preview</span>
+                        <h4 class="text-sm font-bold text-white">{{ bannerForm.title_en || 'Banner Headline Preview' }}</h4>
+                        <p class="text-xs text-white/80 font-khmer">{{ bannerForm.title_km }}</p>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-2 gap-4">
                     <Input
                         v-model="bannerForm.link_url"
@@ -465,6 +574,83 @@ const deleteBanner = (id: number) => {
                     </Button>
                     <Button type="submit" variant="primary" :loading="isSubmittingBanner">
                         Save Banner
+                    </Button>
+                </div>
+            </form>
+        </Dialog>
+
+        <!-- Edit Banner Modal -->
+        <Dialog :open="showEditBannerModal" @close="showEditBannerModal = false" title="Edit Showcase Banner">
+            <form @submit.prevent="submitEditBanner" class="space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Input
+                        v-model="editBannerForm.title_en"
+                        label="Title (English)"
+                        placeholder="e.g. The New Titanium Era"
+                        :error="editBannerErrors.title_en"
+                        required
+                    />
+                    <Input
+                        v-model="editBannerForm.title_km"
+                        label="Title (Khmer / ខ្មែរ)"
+                        placeholder="e.g. យុគសម័យថ្មីនៃទីតានីញ៉ូម"
+                        :error="editBannerErrors.title_km"
+                        required
+                    />
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Input
+                        v-model="editBannerForm.subtitle_en"
+                        label="Subtitle (English)"
+                        placeholder="e.g. Precision forged for extraordinary strength"
+                    />
+                    <Input
+                        v-model="editBannerForm.subtitle_km"
+                        label="Subtitle (Khmer)"
+                        placeholder="e.g. ភាពរឹងមាំ និងប្រណិតភាព"
+                    />
+                </div>
+
+                <Input
+                    v-model="editBannerForm.image_url"
+                    label="Image URL"
+                    placeholder="https://... or /images/banner.jpg"
+                    :error="editBannerErrors.image_url"
+                    required
+                />
+
+                <!-- Image Live Preview -->
+                <div v-if="editBannerForm.image_url" class="rounded-2xl overflow-hidden aspect-[16/9] bg-[#0A0A0C] relative border border-[#E5E5EA]">
+                    <img :src="editBannerForm.image_url" class="w-full h-full object-cover" @error="(e: any) => e.target.style.display = 'none'" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 flex flex-col justify-end text-white">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-white/70">Live Banner Preview</span>
+                        <h4 class="text-sm font-bold text-white">{{ editBannerForm.title_en || 'Banner Headline Preview' }}</h4>
+                        <p class="text-xs text-white/80 font-khmer">{{ editBannerForm.title_km }}</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <Input
+                        v-model="editBannerForm.link_url"
+                        label="Target Link Destination"
+                        placeholder="/shop"
+                        required
+                    />
+                    <Input
+                        v-model="editBannerForm.display_order"
+                        type="number"
+                        label="Sequence Order"
+                        placeholder="1"
+                    />
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-[#E5E5EA]">
+                    <Button type="button" variant="secondary" @click="showEditBannerModal = false">
+                        Cancel
+                    </Button>
+                    <Button type="submit" variant="primary" :loading="isSubmittingEditBanner">
+                        Update Banner
                     </Button>
                 </div>
             </form>

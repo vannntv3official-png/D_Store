@@ -37,6 +37,8 @@ class HomeController extends Controller
                 'title_km' => $b->title['km'] ?? $b->title['en'] ?? '',
                 'subtitle_en' => $b->subtitle['en'] ?? '',
                 'subtitle_km' => $b->subtitle['km'] ?? '',
+                'button_text_en' => $b->button_text['en'] ?? '',
+                'button_text_km' => $b->button_text['km'] ?? '',
                 'link_url' => $b->link_url,
                 'image_url' => $b->image_url,
             ]);

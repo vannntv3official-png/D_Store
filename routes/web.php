@@ -193,6 +193,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('/marketing/coupons', [MarketingAdminController::class, 'storeCoupon'])->name('marketing.coupons.store');
             Route::post('/marketing/coupons/{id}/toggle', [MarketingAdminController::class, 'toggleCoupon'])->name('marketing.coupons.toggle');
             Route::post('/marketing/banners', [MarketingAdminController::class, 'storeBanner'])->name('marketing.banners.store');
+            Route::put('/marketing/banners/{id}', [MarketingAdminController::class, 'updateBanner'])->name('marketing.banners.update');
+            Route::post('/marketing/banners/{id}/toggle', [MarketingAdminController::class, 'toggleBanner'])->name('marketing.banners.toggle');
             Route::delete('/marketing/banners/{id}', [MarketingAdminController::class, 'deleteBanner'])->name('marketing.banners.destroy');
         });
 

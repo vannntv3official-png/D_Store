@@ -115,7 +115,48 @@ class MarketingAdminController extends Controller
             'is_active' => $validated['is_active'] ?? true,
         ]);
 
-        return redirect()->back()->with('success', 'Hero banner added.');
+        return redirect()->back()->with('success', 'Showcase banner added.');
+    }
+
+    public function updateBanner(Request $request, int $id): RedirectResponse
+    {
+        $banner = Banner::findOrFail($id);
+
+        $validated = $request->validate([
+            'title_en' => ['required', 'string', 'max:255'],
+            'title_km' => ['required', 'string', 'max:255'],
+            'subtitle_en' => ['nullable', 'string', 'max:255'],
+            'subtitle_km' => ['nullable', 'string', 'max:255'],
+            'link_url' => ['required', 'string', 'max:500'],
+            'image_url' => ['required', 'string', 'max:500'],
+            'display_order' => ['nullable', 'integer', 'min:0'],
+            'is_active' => ['boolean'],
+        ]);
+
+        $banner->update([
+            'title' => [
+                'en' => $validated['title_en'],
+                'km' => $validated['title_km'],
+            ],
+            'subtitle' => [
+                'en' => $validated['subtitle_en'] ?? '',
+                'km' => $validated['subtitle_km'] ?? '',
+            ],
+            'link_url' => $validated['link_url'],
+            'image_url' => $validated['image_url'],
+            'display_order' => $validated['display_order'] ?? 0,
+            'is_active' => $validated['is_active'] ?? true,
+        ]);
+
+        return redirect()->back()->with('success', 'Showcase banner updated successfully.');
+    }
+
+    public function toggleBanner(int $id): RedirectResponse
+    {
+        $banner = Banner::findOrFail($id);
+        $banner->update(['is_active' => !$banner->is_active]);
+
+        return redirect()->back()->with('success', 'Showcase banner status updated.');
     }
 
     public function deleteBanner(int $id): RedirectResponse
