@@ -122,7 +122,7 @@ class HandleInertiaRequests extends Middleware
                 'store_name' => Setting::get('store_name', 'D STORE'),
                 'store_phone' => Setting::get('store_phone', '+855 23 888 999'),
                 'store_email' => Setting::get('store_email', 'contact@dstore.com.kh'),
-                'store_address' => Setting::get('store_address_en', 'Norodom Blvd, Phnom Penh, Cambodia'),
+                'store_address' => Setting::get($locale === 'km' ? 'store_address_km' : 'store_address_en', $locale === 'km' ? 'មហាវិថីព្រះនរោត្តម រាជធានីភ្នំពេញ' : 'Norodom Blvd, Phnom Penh, Cambodia'),
             ],
         ];
     }

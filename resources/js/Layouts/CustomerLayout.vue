@@ -83,40 +83,40 @@ onUnmounted(() => {
         <div class="bg-[#0B0B0E] text-white/70 text-xs border-b border-white/[0.08] relative z-50">
             <div class="max-w-7xl mx-auto px-4 sm:px-8 py-2 flex items-center justify-between gap-4">
                 <!-- Left: Flagship Store Identity & NBC Live Rate -->
-                <div class="flex items-center gap-4 text-[11px]">
-                    <div class="hidden sm:flex items-center gap-2 font-medium tracking-wide text-white/90">
-                        <span class="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse"></span>
-                        <span class="font-bold tracking-tight text-white">D STORE</span>
-                        <span class="text-white/40">•</span>
-                        <span class="text-white/75 truncate">{{ settings.store_address || 'Norodom Blvd, Phnom Penh' }}</span>
+                <div class="flex items-center gap-3 sm:gap-4 text-[11px] min-w-0">
+                    <div class="hidden sm:flex items-center gap-2 font-medium tracking-wide text-white/90 truncate">
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse shrink-0"></span>
+                        <span class="font-bold tracking-tight text-white shrink-0">D STORE</span>
+                        <span class="text-white/40 shrink-0">•</span>
+                        <span class="text-white/75 truncate">{{ settings.store_address || (currentLocale === 'km' ? 'មហាវិថីព្រះនរោត្តម រាជធានីភ្នំពេញ' : 'Norodom Blvd, Phnom Penh') }}</span>
                     </div>
 
                     <!-- Live NBC Rate Badge -->
-                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/[0.08] border border-white/10 text-[10.5px] text-white/90 font-medium">
-                        <span class="text-white/60">NBC Rate:</span>
-                        <span class="font-bold text-white">$1 ≈ {{ exchangeRate.toLocaleString() }} KHR</span>
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/[0.08] border border-white/10 text-[10.5px] text-white/90 font-medium whitespace-nowrap shrink-0">
+                        <span class="text-white/60">{{ t('nav.nbc_rate') }}:</span>
+                        <span class="font-bold text-white">$1 ≈ {{ exchangeRate.toLocaleString() }} {{ currentLocale === 'km' ? '៛' : 'KHR' }}</span>
                     </div>
                 </div>
 
                 <!-- Right: Concierge Hotline & Segmented Pill Switchers -->
-                <div class="flex items-center gap-3 sm:gap-4 ml-auto">
+                <div class="flex items-center gap-2.5 sm:gap-4 ml-auto shrink-0">
                     <!-- Concierge Hotline -->
                     <a
                         :href="`tel:${settings.store_phone || '+85523888999'}`"
-                        class="hidden md:inline-flex items-center gap-1.5 text-[11px] text-white/70 hover:text-white transition-colors"
+                        class="hidden md:inline-flex items-center gap-1.5 text-[11px] text-white/70 hover:text-white transition-colors whitespace-nowrap"
                     >
-                        <Phone class="w-3 h-3 text-[#10B981]" />
-                        <span>Concierge: {{ settings.store_phone || '+855 23 888 999' }}</span>
+                        <Phone class="w-3 h-3 text-[#10B981] shrink-0" />
+                        <span>{{ t('nav.concierge') }}: {{ settings.store_phone || '+855 23 888 999' }}</span>
                     </a>
 
                     <span class="hidden md:inline text-white/20">|</span>
 
                     <!-- Segmented Currency Switcher -->
-                    <div class="inline-flex items-center p-0.5 rounded-lg bg-white/[0.08] border border-white/10">
+                    <div class="inline-flex items-center p-0.5 rounded-lg bg-white/[0.08] border border-white/10 shrink-0">
                         <button
                             type="button"
                             @click="setCurrency('USD')"
-                            class="px-2 py-0.5 rounded-md text-[10.5px] font-bold transition-all duration-150 cursor-pointer touch-manipulation"
+                            class="px-2 py-0.5 rounded-md text-[10.5px] font-bold transition-all duration-150 cursor-pointer touch-manipulation whitespace-nowrap"
                             :class="currentCurrency === 'USD' ? 'bg-white text-[#111111] shadow-2xs' : 'text-white/70 hover:text-white'"
                         >
                             USD ($)
@@ -124,7 +124,7 @@ onUnmounted(() => {
                         <button
                             type="button"
                             @click="setCurrency('KHR')"
-                            class="px-2 py-0.5 rounded-md text-[10.5px] font-bold transition-all duration-150 cursor-pointer touch-manipulation"
+                            class="px-2 py-0.5 rounded-md text-[10.5px] font-bold transition-all duration-150 cursor-pointer touch-manipulation whitespace-nowrap"
                             :class="currentCurrency === 'KHR' ? 'bg-white text-[#111111] shadow-2xs' : 'text-white/70 hover:text-white'"
                         >
                             KHR (៛)
@@ -132,11 +132,11 @@ onUnmounted(() => {
                     </div>
 
                     <!-- Segmented Language Switcher -->
-                    <div class="inline-flex items-center p-0.5 rounded-lg bg-white/[0.08] border border-white/10">
+                    <div class="inline-flex items-center p-0.5 rounded-lg bg-white/[0.08] border border-white/10 shrink-0">
                         <button
                             type="button"
                             @click="setLocale('km')"
-                            class="px-2 py-0.5 rounded-md text-[10.5px] font-bold transition-all duration-150 cursor-pointer touch-manipulation"
+                            class="px-2.5 py-0.5 rounded-md text-[10.5px] font-bold transition-all duration-150 cursor-pointer touch-manipulation whitespace-nowrap"
                             :class="currentLocale === 'km' ? 'bg-white text-[#111111] shadow-2xs' : 'text-white/70 hover:text-white'"
                         >
                             ភាសាខ្មែរ
@@ -144,7 +144,7 @@ onUnmounted(() => {
                         <button
                             type="button"
                             @click="setLocale('en')"
-                            class="px-2 py-0.5 rounded-md text-[10.5px] font-bold transition-all duration-150 cursor-pointer touch-manipulation"
+                            class="px-2.5 py-0.5 rounded-md text-[10.5px] font-bold transition-all duration-150 cursor-pointer touch-manipulation whitespace-nowrap"
                             :class="currentLocale === 'en' ? 'bg-white text-[#111111] shadow-2xs' : 'text-white/70 hover:text-white'"
                         >
                             English
@@ -156,11 +156,11 @@ onUnmounted(() => {
 
         <!-- Sticky Luxury Header Bar -->
         <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-2xl border-b border-black/[0.06] shadow-[0_4px_24px_-4px_rgba(0,0,0,0.03)] transition-all pt-[env(safe-area-inset-top)]">
-            <div class="max-w-7xl mx-auto px-4 sm:px-8 h-20 flex items-center justify-between gap-4">
+            <div class="max-w-7xl mx-auto px-4 sm:px-8 h-20 flex items-center justify-between gap-3 lg:gap-5">
                 <!-- Mobile Menu Trigger -->
                 <button
                     type="button"
-                    class="lg:hidden w-10 h-10 rounded-xl flex items-center justify-center text-[#111111] hover:bg-[#F5F5F7] transition-all touch-manipulation cursor-pointer active:scale-95"
+                    class="lg:hidden w-10 h-10 rounded-xl flex items-center justify-center text-[#111111] hover:bg-[#F5F5F7] transition-all touch-manipulation cursor-pointer active:scale-95 shrink-0"
                     @click="isMobileMenuOpen = !isMobileMenuOpen"
                     aria-label="Toggle navigation menu"
                 >
@@ -170,80 +170,80 @@ onUnmounted(() => {
 
                 <!-- Luxury Brand Emblem & Title -->
                 <Link href="/" class="flex items-center gap-3 group shrink-0">
-                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#111111] via-[#222226] to-[#38383F] text-white flex items-center justify-center font-black text-xl tracking-tighter shadow-md ring-1 ring-black/10 transition-transform duration-200 group-hover:scale-105">
+                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#111111] via-[#222226] to-[#38383F] text-white flex items-center justify-center font-black text-xl tracking-tighter shadow-md ring-1 ring-black/10 transition-transform duration-200 group-hover:scale-105 shrink-0">
                         D
                     </div>
                     <div class="flex flex-col">
-                        <div class="flex items-center gap-1.5">
-                            <span class="text-xl font-black tracking-tight text-[#111111] group-hover:text-black transition-colors">
+                        <div class="flex items-center gap-1.5 leading-none">
+                            <span class="text-xl font-black tracking-tight text-[#111111] group-hover:text-black transition-colors whitespace-nowrap">
                                 D STORE
                             </span>
                             <span class="text-[9px] font-extrabold uppercase tracking-widest px-1.5 py-0.5 rounded-md bg-[#111111] text-white leading-none">
                                 KH
                             </span>
                         </div>
-                        <span class="text-[9.5px] font-semibold uppercase tracking-widest text-[#86868B] group-hover:text-[#111111] transition-colors">
-                            Luxury Flagship
+                        <span class="text-[9.5px] font-semibold uppercase tracking-widest text-[#86868B] group-hover:text-[#111111] transition-colors whitespace-nowrap mt-1">
+                            {{ t('nav.flagship_title') }}
                         </span>
                     </div>
                 </Link>
 
                 <!-- Desktop Navigation Pill Menu -->
-                <nav class="hidden lg:flex items-center gap-1 text-xs font-semibold">
+                <nav class="hidden lg:flex items-center gap-1 xl:gap-1.5 text-xs font-semibold shrink-0">
                     <Link
                         href="/"
-                        class="px-3.5 py-2 rounded-xl transition-all duration-150"
-                        :class="currentUrl === '/' ? 'bg-[#111111] text-white shadow-xs' : 'text-[#48484A] hover:bg-[#F5F5F7] hover:text-[#111111]'"
+                        class="px-3 py-2 rounded-xl transition-all duration-150 whitespace-nowrap inline-flex items-center justify-center leading-normal"
+                        :class="currentUrl === '/' ? 'bg-[#111111] text-white shadow-xs font-bold' : 'text-[#48484A] hover:bg-[#F5F5F7] hover:text-[#111111]'"
                     >
                         {{ t('nav.home') }}
                     </Link>
                     <Link
                         href="/shop"
-                        class="px-3.5 py-2 rounded-xl transition-all duration-150"
-                        :class="currentUrl === '/shop' ? 'bg-[#111111] text-white shadow-xs' : 'text-[#48484A] hover:bg-[#F5F5F7] hover:text-[#111111]'"
+                        class="px-3 py-2 rounded-xl transition-all duration-150 whitespace-nowrap inline-flex items-center justify-center leading-normal"
+                        :class="currentUrl === '/shop' ? 'bg-[#111111] text-white shadow-xs font-bold' : 'text-[#48484A] hover:bg-[#F5F5F7] hover:text-[#111111]'"
                     >
                         {{ t('nav.shop') }}
                     </Link>
                     <Link
                         href="/shop?category=smartphones"
-                        class="px-3.5 py-2 rounded-xl transition-all duration-150"
-                        :class="currentUrl.includes('category=smartphones') ? 'bg-[#111111] text-white shadow-xs' : 'text-[#48484A] hover:bg-[#F5F5F7] hover:text-[#111111]'"
+                        class="px-3 py-2 rounded-xl transition-all duration-150 whitespace-nowrap inline-flex items-center justify-center leading-normal"
+                        :class="currentUrl.includes('category=smartphones') ? 'bg-[#111111] text-white shadow-xs font-bold' : 'text-[#48484A] hover:bg-[#F5F5F7] hover:text-[#111111]'"
                     >
-                        Smartphones
+                        {{ t('nav.smartphones') }}
                     </Link>
                     <Link
                         href="/shop?category=electronics"
-                        class="px-3.5 py-2 rounded-xl transition-all duration-150"
-                        :class="currentUrl.includes('category=electronics') ? 'bg-[#111111] text-white shadow-xs' : 'text-[#48484A] hover:bg-[#F5F5F7] hover:text-[#111111]'"
+                        class="px-3 py-2 rounded-xl transition-all duration-150 whitespace-nowrap inline-flex items-center justify-center leading-normal"
+                        :class="currentUrl.includes('category=electronics') ? 'bg-[#111111] text-white shadow-xs font-bold' : 'text-[#48484A] hover:bg-[#F5F5F7] hover:text-[#111111]'"
                     >
-                        Electronics
+                        {{ t('nav.electronics') }}
                     </Link>
                     <Link
                         href="/shop?category=fashion-clothing"
-                        class="px-3.5 py-2 rounded-xl transition-all duration-150"
-                        :class="currentUrl.includes('category=fashion-clothing') ? 'bg-[#111111] text-white shadow-xs' : 'text-[#48484A] hover:bg-[#F5F5F7] hover:text-[#111111]'"
+                        class="px-3 py-2 rounded-xl transition-all duration-150 whitespace-nowrap inline-flex items-center justify-center leading-normal"
+                        :class="currentUrl.includes('category=fashion-clothing') ? 'bg-[#111111] text-white shadow-xs font-bold' : 'text-[#48484A] hover:bg-[#F5F5F7] hover:text-[#111111]'"
                     >
-                        Fashion
+                        {{ t('nav.fashion') }}
                     </Link>
                     <Link
                         href="/pages/about-us"
-                        class="px-3.5 py-2 rounded-xl transition-all duration-150"
-                        :class="currentUrl.startsWith('/pages/about') ? 'bg-[#111111] text-white shadow-xs' : 'text-[#48484A] hover:bg-[#F5F5F7] hover:text-[#111111]'"
+                        class="px-3 py-2 rounded-xl transition-all duration-150 whitespace-nowrap inline-flex items-center justify-center leading-normal"
+                        :class="currentUrl.startsWith('/pages/about') ? 'bg-[#111111] text-white shadow-xs font-bold' : 'text-[#48484A] hover:bg-[#F5F5F7] hover:text-[#111111]'"
                     >
                         {{ t('nav.about') }}
                     </Link>
                 </nav>
 
                 <!-- Expanding Luxury Search Bar -->
-                <div class="hidden md:flex items-center relative">
-                    <form @submit.prevent="handleSearch" class="relative flex items-center transition-all duration-300 w-44 lg:w-56 focus-within:w-64 lg:focus-within:w-76">
+                <div class="hidden md:flex items-center relative flex-1 max-w-[240px] xl:max-w-[280px] ml-auto lg:ml-0 shrink">
+                    <form @submit.prevent="handleSearch" class="relative w-full flex items-center">
                         <Search class="w-4 h-4 text-[#86868B] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                         <input
                             ref="searchInputRef"
                             v-model="searchQuery"
                             type="text"
                             :placeholder="t('nav.search_placeholder')"
-                            class="w-full pl-9 pr-9 py-2 bg-[#F5F5F7] hover:bg-[#EFEFF2] focus:bg-white rounded-full text-xs text-[#1D1D1F] border border-[#E5E5EA] focus:border-[#111111] focus:ring-2 focus:ring-black/5 focus:outline-none transition-all placeholder-[#86868B]"
+                            class="w-full pl-9 pr-9 py-2 bg-[#F5F5F7] hover:bg-[#EFEFF2] focus:bg-white rounded-full text-xs text-[#1D1D1F] border border-[#E5E5EA] focus:border-[#111111] focus:ring-2 focus:ring-black/5 focus:outline-none transition-all placeholder-[#86868B] truncate"
                         />
                         <!-- Clear button if text entered -->
                         <button
@@ -257,7 +257,7 @@ onUnmounted(() => {
                         <!-- Keyboard shortcut indicator if empty -->
                         <span
                             v-else
-                            class="hidden xl:inline-flex items-center px-1.5 py-0.5 text-[9.5px] font-bold text-[#86868B] bg-white border border-[#E5E5EA] rounded shadow-2xs absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
+                            class="hidden xl:inline-flex items-center px-1.5 py-0.5 text-[9.5px] font-bold text-[#86868B] bg-white border border-[#E5E5EA] rounded shadow-2xs absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none shrink-0"
                         >
                             ⌘K
                         </span>
@@ -265,7 +265,7 @@ onUnmounted(() => {
                 </div>
 
                 <!-- Right Actions: Wishlist, Shopping Bag, User Account -->
-                <div class="flex items-center gap-2 sm:gap-2.5">
+                <div class="flex items-center gap-2 sm:gap-2.5 shrink-0">
                     <!-- Wishlist Icon -->
                     <Link
                         v-if="auth.user"
@@ -443,30 +443,30 @@ onUnmounted(() => {
                         <Link
                             href="/shop?category=smartphones"
                             @click="isMobileMenuOpen = false"
-                            class="px-3 py-1.5 rounded-lg bg-[#F5F5F7] hover:bg-[#111111] hover:text-white text-xs font-medium transition-colors"
+                            class="px-3 py-1.5 rounded-lg bg-[#F5F5F7] hover:bg-[#111111] hover:text-white text-xs font-medium transition-colors whitespace-nowrap"
                         >
-                            Smartphones
+                            {{ t('nav.smartphones') }}
                         </Link>
                         <Link
                             href="/shop?category=electronics"
                             @click="isMobileMenuOpen = false"
-                            class="px-3 py-1.5 rounded-lg bg-[#F5F5F7] hover:bg-[#111111] hover:text-white text-xs font-medium transition-colors"
+                            class="px-3 py-1.5 rounded-lg bg-[#F5F5F7] hover:bg-[#111111] hover:text-white text-xs font-medium transition-colors whitespace-nowrap"
                         >
-                            Electronics
+                            {{ t('nav.electronics') }}
                         </Link>
                         <Link
                             href="/shop?category=fashion-clothing"
                             @click="isMobileMenuOpen = false"
-                            class="px-3 py-1.5 rounded-lg bg-[#F5F5F7] hover:bg-[#111111] hover:text-white text-xs font-medium transition-colors"
+                            class="px-3 py-1.5 rounded-lg bg-[#F5F5F7] hover:bg-[#111111] hover:text-white text-xs font-medium transition-colors whitespace-nowrap"
                         >
-                            Fashion
+                            {{ t('nav.fashion') }}
                         </Link>
                         <Link
                             href="/shop?category=vehicles-automotive"
                             @click="isMobileMenuOpen = false"
-                            class="px-3 py-1.5 rounded-lg bg-[#F5F5F7] hover:bg-[#111111] hover:text-white text-xs font-medium transition-colors"
+                            class="px-3 py-1.5 rounded-lg bg-[#F5F5F7] hover:bg-[#111111] hover:text-white text-xs font-medium transition-colors whitespace-nowrap"
                         >
-                            Vehicles
+                            {{ t('nav.vehicles') }}
                         </Link>
                     </div>
                 </div>
