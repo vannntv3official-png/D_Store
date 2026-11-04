@@ -79,9 +79,10 @@ onUnmounted(() => {
 
 <template>
     <div class="min-h-screen flex flex-col bg-[#F5F5F7] text-[#1D1D1F] selection:bg-[#111111] selection:text-white">
+        <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:rounded-xl focus:bg-white focus:px-4 focus:py-3 focus:text-sm focus:font-bold">{{ t('nav.skip_content') }}</a>
         <!-- Top Luxury Utility Ribbon (NBC Live Rate, Flagship Store & Segmented Controls) -->
         <div class="bg-[#0B0B0E] text-white/70 text-xs border-b border-white/[0.08] relative z-50">
-            <div class="max-w-7xl mx-auto px-4 sm:px-8 py-2 flex items-center justify-between gap-4">
+            <div class="max-w-7xl mx-auto px-4 sm:px-8 py-2 flex flex-wrap sm:flex-nowrap items-center justify-center sm:justify-between gap-x-4 gap-y-2">
                 <!-- Left: Flagship Store Identity & NBC Live Rate -->
                 <div class="flex items-center gap-3 sm:gap-4 text-[11px] min-w-0">
                     <div class="hidden sm:flex items-center gap-2 font-medium tracking-wide text-white/90 truncate">
@@ -99,7 +100,7 @@ onUnmounted(() => {
                 </div>
 
                 <!-- Right: Concierge Hotline & Segmented Pill Switchers -->
-                <div class="flex items-center gap-2.5 sm:gap-4 ml-auto shrink-0">
+                <div class="flex items-center gap-2.5 sm:gap-4 sm:ml-auto shrink-0">
                     <!-- Concierge Hotline -->
                     <a
                         :href="`tel:${settings.store_phone || '+85523888999'}`"
@@ -162,6 +163,8 @@ onUnmounted(() => {
                     type="button"
                     class="lg:hidden w-10 h-10 rounded-xl flex items-center justify-center text-[#111111] hover:bg-[#F5F5F7] transition-all touch-manipulation cursor-pointer active:scale-95 shrink-0"
                     @click="isMobileMenuOpen = !isMobileMenuOpen"
+                    :aria-expanded="isMobileMenuOpen"
+                    aria-controls="mobile-navigation"
                     aria-label="Toggle navigation menu"
                 >
                     <Menu v-if="!isMobileMenuOpen" class="w-5 h-5" />
@@ -182,7 +185,7 @@ onUnmounted(() => {
                                 KH
                             </span>
                         </div>
-                        <span class="text-[9.5px] font-semibold uppercase tracking-widest text-[#86868B] group-hover:text-[#111111] transition-colors whitespace-nowrap mt-1">
+                        <span class="hidden sm:block text-[9.5px] font-semibold uppercase tracking-widest text-[#86868B] group-hover:text-[#111111] transition-colors whitespace-nowrap mt-1">
                             {{ t('nav.flagship_title') }}
                         </span>
                     </div>
@@ -235,13 +238,14 @@ onUnmounted(() => {
                 </nav>
 
                 <!-- Expanding Luxury Search Bar -->
-                <div class="hidden md:flex items-center relative flex-1 max-w-[240px] xl:max-w-[280px] ml-auto lg:ml-0 shrink">
+                <div class="hidden md:flex items-center relative flex-1 max-w-[240px] xl:max-w-[280px] focus-within:max-w-[340px] xl:focus-within:max-w-[380px] transition-all duration-300 ease-out ml-auto lg:ml-0 shrink">
                     <form @submit.prevent="handleSearch" class="relative w-full flex items-center">
                         <Search class="w-4 h-4 text-[#86868B] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                         <input
                             ref="searchInputRef"
                             v-model="searchQuery"
                             type="text"
+                            :aria-label="t('nav.search_placeholder')"
                             :placeholder="t('nav.search_placeholder')"
                             class="w-full pl-9 pr-9 py-2 bg-[#F5F5F7] hover:bg-[#EFEFF2] focus:bg-white rounded-full text-xs text-[#1D1D1F] border border-[#E5E5EA] focus:border-[#111111] focus:ring-2 focus:ring-black/5 focus:outline-none transition-all placeholder-[#86868B] truncate"
                         />
@@ -250,6 +254,7 @@ onUnmounted(() => {
                             v-if="searchQuery"
                             type="button"
                             @click="clearSearch"
+                            :aria-label="t('nav.clear_search')"
                             class="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-black/10 text-[#86868B] hover:text-[#111111] cursor-pointer"
                         >
                             <X class="w-3.5 h-3.5" />
@@ -304,6 +309,8 @@ onUnmounted(() => {
                             v-if="auth.user"
                             type="button"
                             @click="isUserDropdownOpen = !isUserDropdownOpen"
+                            :aria-expanded="isUserDropdownOpen"
+                            :aria-label="t('nav.account')"
                             class="flex items-center gap-2 p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl hover:bg-[#F5F5F7] transition-all active:scale-95 cursor-pointer select-none"
                             :class="isUserDropdownOpen ? 'bg-[#F5F5F7]' : ''"
                         >
@@ -333,93 +340,97 @@ onUnmounted(() => {
                         </div>
 
                         <!-- Floating Luxury Dropdown Card -->
-                        <div
-                            v-if="isUserDropdownOpen"
-                            class="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-2xl border border-[#E5E5EA] py-2 z-50 origin-top-right transform transition-all duration-150 ease-out animate-in fade-in zoom-in-95"
-                        >
-                            <template v-if="auth.user">
-                                <!-- Profile Header Card -->
-                                <div class="px-4 py-3 border-b border-[#F5F5F7] bg-gradient-to-b from-[#FAFAFA] to-white rounded-t-2xl">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-[#111111] to-[#383840] text-white font-bold text-sm flex items-center justify-center shadow-xs">
-                                            {{ userInitials }}
-                                        </div>
-                                        <div class="flex-1 min-w-0">
-                                            <p class="text-xs font-bold text-[#111111] truncate">{{ auth.user.name }}</p>
-                                            <p class="text-[10.5px] text-[#86868B] truncate">{{ auth.user.phone || auth.user.email }}</p>
+                        <transition name="d-dropdown">
+                            <div
+                                v-if="isUserDropdownOpen"
+                                class="absolute right-0 mt-3 w-64 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-[#E5E5EA] py-2 z-50 origin-top-right transform"
+                            >
+                                <template v-if="auth.user">
+                                    <!-- Profile Header Card -->
+                                    <div class="px-4 py-3 border-b border-[#F5F5F7] bg-gradient-to-b from-[#FAFAFA] to-white rounded-t-2xl">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-[#111111] to-[#383840] text-white font-bold text-sm flex items-center justify-center shadow-xs">
+                                                {{ userInitials }}
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-xs font-bold text-[#111111] truncate">{{ auth.user.name }}</p>
+                                                <p class="text-[10.5px] text-[#86868B] truncate">{{ auth.user.phone || auth.user.email }}</p>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <!-- Menu Items -->
-                                <div class="py-1">
-                                    <Link
-                                        href="/account/profile"
-                                        @click="isUserDropdownOpen = false"
-                                        class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors"
-                                    >
-                                        <UserIcon class="w-4 h-4 text-[#86868B]" />
-                                        <span>{{ t('account.profile') }}</span>
-                                    </Link>
-                                    <Link
-                                        href="/account/orders"
-                                        @click="isUserDropdownOpen = false"
-                                        class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors"
-                                    >
-                                        <Package class="w-4 h-4 text-[#86868B]" />
-                                        <span>{{ t('nav.orders') }}</span>
-                                    </Link>
-                                    <Link
-                                        href="/account/loyalty"
-                                        @click="isUserDropdownOpen = false"
-                                        class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors"
-                                    >
-                                        <Award class="w-4 h-4 text-[#86868B]" />
-                                        <span>{{ t('nav.loyalty') }}</span>
-                                    </Link>
-                                    <Link
-                                        href="/account/wishlist"
-                                        @click="isUserDropdownOpen = false"
-                                        class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors"
-                                    >
-                                        <Heart class="w-4 h-4 text-[#86868B]" />
-                                        <span>{{ t('nav.wishlist') }}</span>
-                                    </Link>
-                                    <Link
-                                        v-if="auth.is_staff"
-                                        href="/admin"
-                                        @click="isUserDropdownOpen = false"
-                                        class="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-[#0071E3] hover:bg-[#EFF6FF] transition-colors"
-                                    >
-                                        <ShieldCheck class="w-4 h-4 text-[#0071E3]" />
-                                        <span>{{ t('nav.admin') }}</span>
-                                    </Link>
-                                </div>
+                                    <!-- Menu Items -->
+                                    <div class="py-1">
+                                        <Link
+                                            href="/account/profile"
+                                            @click="isUserDropdownOpen = false"
+                                            class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors"
+                                        >
+                                            <UserIcon class="w-4 h-4 text-[#86868B]" />
+                                            <span>{{ t('account.profile') }}</span>
+                                        </Link>
+                                        <Link
+                                            href="/account/orders"
+                                            @click="isUserDropdownOpen = false"
+                                            class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors"
+                                        >
+                                            <Package class="w-4 h-4 text-[#86868B]" />
+                                            <span>{{ t('nav.orders') }}</span>
+                                        </Link>
+                                        <Link
+                                            href="/account/loyalty"
+                                            @click="isUserDropdownOpen = false"
+                                            class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors"
+                                        >
+                                            <Award class="w-4 h-4 text-[#86868B]" />
+                                            <span>{{ t('nav.loyalty') }}</span>
+                                        </Link>
+                                        <Link
+                                            href="/account/wishlist"
+                                            @click="isUserDropdownOpen = false"
+                                            class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors"
+                                        >
+                                            <Heart class="w-4 h-4 text-[#86868B]" />
+                                            <span>{{ t('nav.wishlist') }}</span>
+                                        </Link>
+                                        <Link
+                                            v-if="auth.is_staff"
+                                            href="/admin"
+                                            @click="isUserDropdownOpen = false"
+                                            class="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-[#0071E3] hover:bg-[#EFF6FF] transition-colors"
+                                        >
+                                            <ShieldCheck class="w-4 h-4 text-[#0071E3]" />
+                                            <span>{{ t('nav.admin') }}</span>
+                                        </Link>
+                                    </div>
 
-                                <!-- Logout -->
-                                <div class="border-t border-[#F5F5F7] pt-1">
-                                    <button
-                                        type="button"
-                                        @click="logout"
-                                        class="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-[#DC2626] hover:bg-[#FEE2E2] transition-colors cursor-pointer"
-                                    >
-                                        <LogOut class="w-4 h-4 text-[#DC2626]" />
-                                        <span>{{ t('nav.logout') }}</span>
-                                    </button>
-                                </div>
-                            </template>
-                        </div>
+                                    <!-- Logout -->
+                                    <div class="border-t border-[#F5F5F7] pt-1">
+                                        <button
+                                            type="button"
+                                            @click="logout"
+                                            class="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-[#DC2626] hover:bg-[#FEE2E2] transition-colors cursor-pointer"
+                                        >
+                                            <LogOut class="w-4 h-4 text-[#DC2626]" />
+                                            <span>{{ t('nav.logout') }}</span>
+                                        </button>
+                                    </div>
+                                </template>
+                            </div>
+                        </transition>
                     </div>
                 </div>
             </div>
 
             <!-- Mobile Slide-Down Drawer -->
-            <div v-if="isMobileMenuOpen" class="lg:hidden bg-white/98 backdrop-blur-2xl border-t border-[#E5E5EA] px-5 py-5 space-y-5 animate-in slide-in-from-top-4 duration-200">
+            <transition name="mobile-drawer">
+                <div v-if="isMobileMenuOpen" id="mobile-navigation" class="lg:hidden max-h-[calc(100dvh-10rem)] overflow-y-auto overscroll-contain bg-white/98 backdrop-blur-2xl border-t border-[#E5E5EA] px-5 py-5 space-y-5">
                 <!-- Mobile Search Bar -->
                 <form @submit.prevent="handleSearch" class="relative">
                     <input
                         v-model="searchQuery"
                         type="text"
+                        :aria-label="t('nav.search_placeholder')"
                         :placeholder="t('nav.search_placeholder')"
                         class="w-full pl-9 pr-9 py-2.5 bg-[#F5F5F7] rounded-xl text-xs text-[#1D1D1F] border border-[#E5E5EA] focus:border-[#111111] focus:bg-white focus:outline-none"
                     />
@@ -428,6 +439,7 @@ onUnmounted(() => {
                         v-if="searchQuery"
                         type="button"
                         @click="searchQuery = ''"
+                        :aria-label="t('nav.clear_search')"
                         class="absolute right-3 top-3 p-0.5 rounded-full hover:bg-black/10 text-[#86868B]"
                     >
                         <X class="w-3.5 h-3.5" />
@@ -512,7 +524,7 @@ onUnmounted(() => {
                 </nav>
 
                 <!-- Mobile Language & Currency Quick Switcher -->
-                <div class="pt-2 border-t border-[#E5E5EA] flex items-center justify-between gap-3 text-xs">
+                <div class="pt-2 border-t border-[#E5E5EA] flex flex-wrap items-center justify-between gap-3 text-xs">
                     <div class="flex items-center gap-1.5">
                         <span class="text-[11px] text-[#86868B]">Currency:</span>
                         <button
@@ -553,24 +565,28 @@ onUnmounted(() => {
                     </div>
                 </div>
             </div>
+            </transition>
         </header>
 
         <!-- Flash Messages Notification Banner -->
         <div v-if="flash.success || flash.error || flash.warning" class="max-w-7xl mx-auto px-4 sm:px-8 mt-4 w-full">
             <div
                 v-if="flash.success"
+                role="status"
                 class="p-4 rounded-2xl bg-[#DCFCE7] border border-[#BBF7D0] text-[#166534] text-xs font-semibold flex items-center justify-between"
             >
                 <span>{{ flash.success }}</span>
             </div>
             <div
                 v-if="flash.error"
+                role="alert"
                 class="p-4 rounded-2xl bg-[#FEE2E2] border border-[#FECACA] text-[#991B1B] text-xs font-semibold flex items-center justify-between"
             >
                 <span>{{ flash.error }}</span>
             </div>
             <div
                 v-if="flash.warning"
+                role="status"
                 class="p-4 rounded-2xl bg-[#FEF3C7] border border-[#FDE68A] text-[#92400E] text-xs font-semibold flex items-center justify-between"
             >
                 <span>{{ flash.warning }}</span>
@@ -578,37 +594,39 @@ onUnmounted(() => {
         </div>
 
         <!-- Main Content Slot (with mobile bottom padding for native dock) -->
-        <main class="flex-1 pb-20 md:pb-0">
+        <main id="main-content" tabindex="-1" class="flex-1 pb-20 md:pb-0 scroll-mt-24">
             <slot />
         </main>
 
         <!-- Native Mobile Bottom Tab Navigation Dock (iOS / Android) -->
-        <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-t border-[#E5E5EA] px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-lg flex items-center justify-around select-none">
+        <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/92 backdrop-blur-2xl border-t border-[#E5E5EA]/80 px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-lg flex items-center justify-around select-none">
             <Link
                 href="/"
-                class="flex flex-col items-center gap-1 py-1 px-3 text-[10px] font-semibold transition-colors touch-manipulation active:scale-95"
-                :class="page.url === '/' ? 'text-[#111111]' : 'text-[#86868B] hover:text-[#111111]'"
+                class="flex flex-col items-center gap-1 py-1 px-3 text-[10px] font-semibold transition-all duration-150 touch-manipulation active:scale-90 relative"
+                :class="page.url === '/' ? 'text-[#111111] font-bold' : 'text-[#86868B] hover:text-[#111111]'"
             >
-                <Home class="w-5 h-5" :class="page.url === '/' ? 'stroke-[2.5]' : 'stroke-2'" />
-                <span>Home</span>
+                <Home class="w-5 h-5 transition-transform duration-200" :class="page.url === '/' ? 'scale-110 stroke-[2.5]' : 'stroke-2'" />
+                <span class="whitespace-nowrap">{{ t('nav.home') }}</span>
+                <span v-if="page.url === '/'" class="w-1 h-1 rounded-full bg-[#111111] absolute -bottom-0.5"></span>
             </Link>
 
             <Link
                 href="/shop"
-                class="flex flex-col items-center gap-1 py-1 px-3 text-[10px] font-semibold transition-colors touch-manipulation active:scale-95"
-                :class="page.url.startsWith('/shop') ? 'text-[#111111]' : 'text-[#86868B] hover:text-[#111111]'"
+                class="flex flex-col items-center gap-1 py-1 px-3 text-[10px] font-semibold transition-all duration-150 touch-manipulation active:scale-90 relative"
+                :class="page.url.startsWith('/shop') ? 'text-[#111111] font-bold' : 'text-[#86868B] hover:text-[#111111]'"
             >
-                <LayoutGrid class="w-5 h-5" :class="page.url.startsWith('/shop') ? 'stroke-[2.5]' : 'stroke-2'" />
-                <span>Shop</span>
+                <LayoutGrid class="w-5 h-5 transition-transform duration-200" :class="page.url.startsWith('/shop') ? 'scale-110 stroke-[2.5]' : 'stroke-2'" />
+                <span class="whitespace-nowrap">{{ t('nav.shop') }}</span>
+                <span v-if="page.url.startsWith('/shop')" class="w-1 h-1 rounded-full bg-[#111111] absolute -bottom-0.5"></span>
             </Link>
 
             <Link
                 href="/cart"
-                class="flex flex-col items-center gap-1 py-1 px-3 text-[10px] font-semibold transition-colors touch-manipulation active:scale-95 relative"
-                :class="page.url.startsWith('/cart') ? 'text-[#111111]' : 'text-[#86868B] hover:text-[#111111]'"
+                class="flex flex-col items-center gap-1 py-1 px-3 text-[10px] font-semibold transition-all duration-150 touch-manipulation active:scale-90 relative"
+                :class="page.url.startsWith('/cart') ? 'text-[#111111] font-bold' : 'text-[#86868B] hover:text-[#111111]'"
             >
                 <div class="relative">
-                    <ShoppingBag class="w-5 h-5" :class="page.url.startsWith('/cart') ? 'stroke-[2.5]' : 'stroke-2'" />
+                    <ShoppingBag class="w-5 h-5 transition-transform duration-200" :class="page.url.startsWith('/cart') ? 'scale-110 stroke-[2.5]' : 'stroke-2'" />
                     <span
                         v-if="cart.item_count > 0"
                         class="absolute -top-1.5 -right-2 min-w-4 h-4 px-1 bg-[#111111] text-white text-[9px] font-bold rounded-full flex items-center justify-center animate-pulse"
@@ -616,26 +634,29 @@ onUnmounted(() => {
                         {{ cart.item_count }}
                     </span>
                 </div>
-                <span>Cart</span>
+                <span class="whitespace-nowrap">{{ t('nav.cart') }}</span>
+                <span v-if="page.url.startsWith('/cart')" class="w-1 h-1 rounded-full bg-[#111111] absolute -bottom-0.5"></span>
             </Link>
 
             <Link
                 v-if="auth.user"
                 href="/account/wishlist"
-                class="flex flex-col items-center gap-1 py-1 px-3 text-[10px] font-semibold transition-colors touch-manipulation active:scale-95"
-                :class="page.url.startsWith('/account/wishlist') ? 'text-[#111111]' : 'text-[#86868B] hover:text-[#111111]'"
+                class="flex flex-col items-center gap-1 py-1 px-3 text-[10px] font-semibold transition-all duration-150 touch-manipulation active:scale-90 relative"
+                :class="page.url.startsWith('/account/wishlist') ? 'text-[#111111] font-bold' : 'text-[#86868B] hover:text-[#111111]'"
             >
-                <Heart class="w-5 h-5" :class="page.url.startsWith('/account/wishlist') ? 'stroke-[2.5]' : 'stroke-2'" />
-                <span>Wishlist</span>
+                <Heart class="w-5 h-5 transition-transform duration-200" :class="page.url.startsWith('/account/wishlist') ? 'scale-110 stroke-[2.5]' : 'stroke-2'" />
+                <span class="whitespace-nowrap">{{ t('nav.wishlist') }}</span>
+                <span v-if="page.url.startsWith('/account/wishlist')" class="w-1 h-1 rounded-full bg-[#111111] absolute -bottom-0.5"></span>
             </Link>
 
             <Link
                 :href="auth.user ? '/account/profile' : '/login'"
-                class="flex flex-col items-center gap-1 py-1 px-3 text-[10px] font-semibold transition-colors touch-manipulation active:scale-95"
-                :class="page.url.startsWith('/account') || page.url.startsWith('/login') ? 'text-[#111111]' : 'text-[#86868B] hover:text-[#111111]'"
+                class="flex flex-col items-center gap-1 py-1 px-3 text-[10px] font-semibold transition-all duration-150 touch-manipulation active:scale-90 relative"
+                :class="page.url.startsWith('/account') || page.url.startsWith('/login') ? 'text-[#111111] font-bold' : 'text-[#86868B] hover:text-[#111111]'"
             >
-                <UserIcon class="w-5 h-5" :class="page.url.startsWith('/account') || page.url.startsWith('/login') ? 'stroke-[2.5]' : 'stroke-2'" />
-                <span>{{ auth.user ? 'Account' : 'Sign In' }}</span>
+                <UserIcon class="w-5 h-5 transition-transform duration-200" :class="page.url.startsWith('/account') || page.url.startsWith('/login') ? 'scale-110 stroke-[2.5]' : 'stroke-2'" />
+                <span class="whitespace-nowrap">{{ auth.user ? t('nav.account') : t('nav.login') }}</span>
+                <span v-if="page.url.startsWith('/account') || page.url.startsWith('/login')" class="w-1 h-1 rounded-full bg-[#111111] absolute -bottom-0.5"></span>
             </Link>
         </nav>
 

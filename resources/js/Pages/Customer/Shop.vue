@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, computed, watch } from 'vue';
+import { ref, reactive, computed, watch, nextTick, onUnmounted } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import CustomerLayout from '@/Layouts/CustomerLayout.vue';
 import ProductCard from '@/Components/ProductCard.vue';
@@ -69,6 +69,44 @@ const displayedBrands = computed(() => {
 });
 
 const isMobileFilterDrawerOpen = ref(false);
+const filterDialog = ref<HTMLElement | null>(null);
+let filterOpener: HTMLElement | null = null;
+let previousOverflow = '';
+
+watch(isMobileFilterDrawerOpen, async (isOpen) => {
+    if (isOpen) {
+        filterOpener = document.activeElement as HTMLElement;
+        previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        await nextTick();
+        filterDialog.value?.focus();
+    } else {
+        document.body.style.overflow = previousOverflow;
+        filterOpener?.focus();
+    }
+});
+
+onUnmounted(() => {
+    if (isMobileFilterDrawerOpen.value) document.body.style.overflow = previousOverflow;
+});
+
+const handleFilterKeydown = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') {
+        isMobileFilterDrawerOpen.value = false;
+    }
+    if (event.key !== 'Tab') return;
+    const controls = filterDialog.value?.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), a[href]');
+    if (!controls?.length) return;
+    const first = controls[0];
+    const last = controls[controls.length - 1];
+    if (event.shiftKey && (document.activeElement === first || document.activeElement === filterDialog.value)) {
+        event.preventDefault();
+        last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+    }
+};
 
 const activeFilterCount = computed(() => {
     let count = 0;
@@ -334,6 +372,7 @@ const clearFilters = () => {
         <Teleport to="body">
             <div
                 v-if="isMobileFilterDrawerOpen"
+                @keydown="handleFilterKeydown"
                 class="fixed inset-0 z-50 lg:hidden flex justify-end"
             >
                 <!-- Backdrop -->
@@ -343,7 +382,8 @@ const clearFilters = () => {
                 ></div>
 
                 <!-- Slide-over Content -->
-                <div class="relative w-full max-w-md bg-white h-full flex flex-col z-10 shadow-2xl pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+                <transition name="drawer-slide" appear>
+                    <div ref="filterDialog" role="dialog" aria-modal="true" :aria-label="t('shop.filter_by')" tabindex="-1" class="relative w-full max-w-md bg-white h-full flex flex-col z-10 shadow-2xl pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
                     <!-- Drawer Header -->
                     <div class="h-16 px-6 border-b border-[#E5E5EA] flex items-center justify-between">
                         <div class="flex items-center gap-2">
@@ -474,6 +514,7 @@ const clearFilters = () => {
                         </Button>
                     </div>
                 </div>
+                </transition>
             </div>
         </Teleport>
     </CustomerLayout>

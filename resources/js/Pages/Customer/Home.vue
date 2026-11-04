@@ -178,51 +178,53 @@ onUnmounted(() => {
 
                 <!-- Foreground Content Container -->
                 <div class="relative z-10 max-w-7xl w-full mx-auto px-6 sm:px-12 md:px-16 py-16 sm:py-24">
-                    <div class="max-w-2xl space-y-5 sm:space-y-6">
-                        <!-- Pill Badge -->
-                        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md text-white/90 text-[11px] font-bold uppercase tracking-widest border border-white/15 shadow-sm">
-                            <Sparkles class="w-3.5 h-3.5 text-[#D4AF37]" />
-                            <span>
-                                {{ currentLocale === 'km' 
-                                    ? (currentSlide.badge_km || 'ការជ្រើសរើសពិសេស') 
-                                    : (currentSlide.badge_en || 'Showcase Release') 
-                                }}
-                            </span>
-                        </div>
-
-                        <!-- Main Banner Title -->
-                        <h1 class="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight text-white leading-[1.15] drop-shadow-sm">
-                            {{ currentLocale === 'km' && currentSlide.title_km ? currentSlide.title_km : currentSlide.title_en }}
-                        </h1>
-
-                        <!-- Subtitle Description -->
-                        <p class="text-sm sm:text-base md:text-lg text-white/80 font-normal leading-relaxed line-clamp-3 max-w-xl">
-                            {{ currentLocale === 'km' && currentSlide.subtitle_km ? currentSlide.subtitle_km : (currentSlide.subtitle_en || 'Curated luxury essentials delivered with distinction in Cambodia.') }}
-                        </p>
-
-                        <!-- Action Buttons -->
-                        <div class="flex flex-wrap items-center gap-3.5 pt-2">
-                            <Link
-                                :href="currentSlide.link_url || '/shop'"
-                                class="inline-flex items-center gap-2 px-7 py-3.5 sm:px-8 sm:py-4 rounded-2xl bg-white text-[#111111] font-bold text-xs sm:text-sm hover:bg-[#F5F5F7] transition-all shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 cursor-pointer touch-manipulation group"
-                            >
+                    <transition name="hero-text" mode="out-in">
+                        <div :key="currentSlideIndex" class="max-w-2xl space-y-5 sm:space-y-6">
+                            <!-- Pill Badge -->
+                            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md text-white/90 text-[11px] font-bold uppercase tracking-widest border border-white/15 shadow-sm d-shimmer">
+                                <Sparkles class="w-3.5 h-3.5 text-[#D4AF37]" />
                                 <span>
-                                    {{ currentLocale === 'km'
-                                        ? (currentSlide.button_text_km || t('hero.shop_now'))
-                                        : (currentSlide.button_text_en || t('hero.shop_now'))
+                                    {{ currentLocale === 'km' 
+                                        ? (currentSlide.badge_km || 'ការជ្រើសរើសពិសេស') 
+                                        : (currentSlide.badge_en || 'Showcase Release') 
                                     }}
                                 </span>
-                                <ArrowRight class="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                            </Link>
+                            </div>
 
-                            <Link
-                                href="/shop"
-                                class="inline-flex items-center gap-2 px-6 py-3.5 sm:px-7 sm:py-4 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs sm:text-sm backdrop-blur-md transition-all border border-white/15 cursor-pointer active:scale-95"
-                            >
-                                <span>{{ t('nav.shop') }}</span>
-                            </Link>
+                            <!-- Main Banner Title -->
+                            <h1 class="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight text-white leading-[1.15] drop-shadow-sm">
+                                {{ currentLocale === 'km' && currentSlide.title_km ? currentSlide.title_km : currentSlide.title_en }}
+                            </h1>
+
+                            <!-- Subtitle Description -->
+                            <p class="text-sm sm:text-base md:text-lg text-white/80 font-normal leading-relaxed line-clamp-3 max-w-xl">
+                                {{ currentLocale === 'km' && currentSlide.subtitle_km ? currentSlide.subtitle_km : (currentSlide.subtitle_en || 'Curated luxury essentials delivered with distinction in Cambodia.') }}
+                            </p>
+
+                            <!-- Action Buttons -->
+                            <div class="flex flex-wrap items-center gap-3.5 pt-2">
+                                <Link
+                                    :href="currentSlide.link_url || '/shop'"
+                                    class="inline-flex items-center gap-2 px-7 py-3.5 sm:px-8 sm:py-4 rounded-2xl bg-white text-[#111111] font-bold text-xs sm:text-sm hover:bg-[#F5F5F7] transition-all shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 cursor-pointer touch-manipulation group d-shimmer"
+                                >
+                                    <span>
+                                        {{ currentLocale === 'km'
+                                            ? (currentSlide.button_text_km || t('hero.shop_now'))
+                                            : (currentSlide.button_text_en || t('hero.shop_now'))
+                                        }}
+                                    </span>
+                                    <ArrowRight class="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
+                                </Link>
+
+                                <Link
+                                    href="/shop"
+                                    class="inline-flex items-center gap-2 px-6 py-3.5 sm:px-7 sm:py-4 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs sm:text-sm backdrop-blur-md transition-all border border-white/15 cursor-pointer active:scale-95"
+                                >
+                                    <span>{{ t('nav.shop') }}</span>
+                                </Link>
+                            </div>
                         </div>
-                    </div>
+                    </transition>
                 </div>
 
                 <!-- Floating Previous / Next Slide Controls (Desktop / Tablet) -->
@@ -268,14 +270,14 @@ onUnmounted(() => {
         </section>
 
         <!-- Brand Pillars Bar -->
-        <section class="border-y border-[#E5E5EA] bg-white py-8">
-            <div class="max-w-7xl mx-auto px-4 sm:px-8 grid grid-cols-2 md:grid-cols-4 gap-6">
-                <div class="flex items-center gap-3.5">
-                    <div class="p-2.5 rounded-xl bg-[#F5F5F7] text-[#111111] shrink-0">
-                        <Shield class="w-5 h-5 text-[#10B981]" />
+        <section class="border-y border-[#E5E5EA] bg-white py-6 sm:py-8">
+            <div class="max-w-7xl mx-auto px-4 sm:px-8 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+                <div class="group flex items-center gap-3.5 p-3 rounded-2xl transition-all duration-200 hover:bg-[#F5F5F7]/80 cursor-default">
+                    <div class="p-2.5 rounded-xl bg-[#F5F5F7] text-[#111111] shrink-0 transition-all duration-300 ease-out group-hover:scale-110 group-hover:-rotate-3 group-hover:bg-[#111111] group-hover:text-white group-hover:shadow-xs">
+                        <Shield class="w-5 h-5 text-[#10B981] group-hover:text-white transition-colors" />
                     </div>
                     <div>
-                        <h4 class="text-xs font-bold text-[#111111]">
+                        <h4 class="text-xs font-bold text-[#111111] transition-colors group-hover:text-black">
                             {{ currentLocale === 'km' ? 'ទំនិញសុទ្ធ ១០០%' : '100% Authentic' }}
                         </h4>
                         <p class="text-[11px] text-[#86868B]">
@@ -284,12 +286,12 @@ onUnmounted(() => {
                     </div>
                 </div>
 
-                <div class="flex items-center gap-3.5">
-                    <div class="p-2.5 rounded-xl bg-[#F5F5F7] text-[#111111] shrink-0">
-                        <Truck class="w-5 h-5 text-[#0071E3]" />
+                <div class="group flex items-center gap-3.5 p-3 rounded-2xl transition-all duration-200 hover:bg-[#F5F5F7]/80 cursor-default">
+                    <div class="p-2.5 rounded-xl bg-[#F5F5F7] text-[#111111] shrink-0 transition-all duration-300 ease-out group-hover:scale-110 group-hover:-rotate-3 group-hover:bg-[#111111] group-hover:text-white group-hover:shadow-xs">
+                        <Truck class="w-5 h-5 text-[#0071E3] group-hover:text-white transition-colors" />
                     </div>
                     <div>
-                        <h4 class="text-xs font-bold text-[#111111]">
+                        <h4 class="text-xs font-bold text-[#111111] transition-colors group-hover:text-black">
                             {{ currentLocale === 'km' ? 'ដឹកជញ្ជូនរហ័ស' : 'Express Delivery' }}
                         </h4>
                         <p class="text-[11px] text-[#86868B]">
@@ -298,12 +300,12 @@ onUnmounted(() => {
                     </div>
                 </div>
 
-                <div class="flex items-center gap-3.5">
-                    <div class="p-2.5 rounded-xl bg-[#F5F5F7] text-[#111111] shrink-0">
-                        <Sparkles class="w-5 h-5 text-[#D4AF37]" />
+                <div class="group flex items-center gap-3.5 p-3 rounded-2xl transition-all duration-200 hover:bg-[#F5F5F7]/80 cursor-default">
+                    <div class="p-2.5 rounded-xl bg-[#F5F5F7] text-[#111111] shrink-0 transition-all duration-300 ease-out group-hover:scale-110 group-hover:-rotate-3 group-hover:bg-[#111111] group-hover:text-white group-hover:shadow-xs">
+                        <Sparkles class="w-5 h-5 text-[#D4AF37] group-hover:text-white transition-colors" />
                     </div>
                     <div>
-                        <h4 class="text-xs font-bold text-[#111111]">
+                        <h4 class="text-xs font-bold text-[#111111] transition-colors group-hover:text-black">
                             {{ currentLocale === 'km' ? 'បាគង KHQR ផ្លូវការ' : 'Bakong KHQR' }}
                         </h4>
                         <p class="text-[11px] text-[#86868B]">
@@ -312,12 +314,12 @@ onUnmounted(() => {
                     </div>
                 </div>
 
-                <div class="flex items-center gap-3.5">
-                    <div class="p-2.5 rounded-xl bg-[#F5F5F7] text-[#111111] shrink-0">
-                        <Headphones class="w-5 h-5 text-[#86868B]" />
+                <div class="group flex items-center gap-3.5 p-3 rounded-2xl transition-all duration-200 hover:bg-[#F5F5F7]/80 cursor-default">
+                    <div class="p-2.5 rounded-xl bg-[#F5F5F7] text-[#111111] shrink-0 transition-all duration-300 ease-out group-hover:scale-110 group-hover:-rotate-3 group-hover:bg-[#111111] group-hover:text-white group-hover:shadow-xs">
+                        <Headphones class="w-5 h-5 text-[#86868B] group-hover:text-white transition-colors" />
                     </div>
                     <div>
-                        <h4 class="text-xs font-bold text-[#111111]">
+                        <h4 class="text-xs font-bold text-[#111111] transition-colors group-hover:text-black">
                             {{ currentLocale === 'km' ? 'សេវាអតិថិជន ២៤/៧' : 'Client Concierge' }}
                         </h4>
                         <p class="text-[11px] text-[#86868B]">
@@ -339,9 +341,9 @@ onUnmounted(() => {
                         {{ t('home.featured_subtitle') }}
                     </p>
                 </div>
-                <Link href="/shop" class="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold text-[#0071E3] hover:underline">
+                <Link href="/shop" class="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold text-[#0071E3] hover:text-[#0077ED] transition-colors group">
                     <span>{{ currentLocale === 'km' ? 'មើលទាំងអស់' : 'View All' }}</span>
-                    <ArrowRight class="w-3.5 h-3.5" />
+                    <ArrowRight class="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-1" />
                 </Link>
             </div>
 
@@ -350,12 +352,12 @@ onUnmounted(() => {
                     v-for="cat in categories"
                     :key="cat.id"
                     :href="`/shop?category=${cat.slug}`"
-                    class="group relative bg-white rounded-2xl border border-[#E5E5EA] p-6 text-center overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[#111111]"
+                    class="group relative bg-white rounded-2xl border border-[#E5E5EA] p-6 text-center overflow-hidden d-card-hover hover:border-[#111111] active:scale-[0.98]"
                 >
-                    <div class="aspect-square w-16 h-16 mx-auto mb-4 rounded-full bg-[#F5F5F7] flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <Sparkles class="w-6 h-6 text-[#111111]" />
+                    <div class="aspect-square w-16 h-16 mx-auto mb-4 rounded-2xl bg-[#F5F5F7] flex items-center justify-center transition-all duration-300 ease-out group-hover:scale-110 group-hover:bg-[#111111] group-hover:text-white group-hover:shadow-md">
+                        <Sparkles class="w-6 h-6 text-[#111111] group-hover:text-white transition-colors duration-300" />
                     </div>
-                    <h3 class="text-sm font-bold text-[#1D1D1F] group-hover:text-[#0071E3] transition-colors">
+                    <h3 class="text-sm font-bold text-[#1D1D1F] group-hover:text-[#0071E3] transition-colors duration-200">
                         {{ currentLocale === 'km' && cat.name_km ? cat.name_km : cat.name_en }}
                     </h3>
                 </Link>
@@ -366,6 +368,10 @@ onUnmounted(() => {
         <section class="max-w-7xl mx-auto px-4 sm:px-8 py-12">
             <div class="flex items-end justify-between mb-10">
                 <div>
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#111111]/[0.05] text-[#111111] text-[10.5px] font-bold uppercase tracking-wider mb-2">
+                        <Sparkles class="w-3 h-3 text-[#0071E3]" />
+                        <span>{{ currentLocale === 'km' ? 'ទំនិញពេញនិយម' : 'Curated Selection' }}</span>
+                    </div>
                     <h2 class="text-2xl sm:text-3xl font-extrabold text-[#111111] tracking-tight">
                         {{ t('home.trending_products') }}
                     </h2>
@@ -373,9 +379,9 @@ onUnmounted(() => {
                         {{ t('home.trending_subtitle') }}
                     </p>
                 </div>
-                <Link href="/shop" class="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold text-[#0071E3] hover:underline">
+                <Link href="/shop" class="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold text-[#0071E3] hover:text-[#0077ED] transition-colors group">
                     <span>{{ currentLocale === 'km' ? 'ស្វែងរកកាតាឡុក' : 'Explore Catalog' }}</span>
-                    <ArrowRight class="w-3.5 h-3.5" />
+                    <ArrowRight class="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-1" />
                 </Link>
             </div>
 
@@ -392,6 +398,10 @@ onUnmounted(() => {
         <section class="max-w-7xl mx-auto px-4 sm:px-8 py-16">
             <div class="flex items-end justify-between mb-10">
                 <div>
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#111111]/[0.05] text-[#111111] text-[10.5px] font-bold uppercase tracking-wider mb-2">
+                        <Zap class="w-3 h-3 text-[#10B981]" />
+                        <span>{{ currentLocale === 'km' ? 'មកដល់ថ្មីៗ' : 'Exclusive Drop' }}</span>
+                    </div>
                     <h2 class="text-2xl sm:text-3xl font-extrabold text-[#111111] tracking-tight">
                         {{ t('home.new_arrivals') }}
                     </h2>
@@ -399,6 +409,10 @@ onUnmounted(() => {
                         {{ currentLocale === 'km' ? 'ទំនិញទើបមកដល់ថ្មីក្នុងបណ្តុំទំនិញរាជធានីភ្នំពេញ' : 'Latest editions added to our Phnom Penh collection.' }}
                     </p>
                 </div>
+                <Link href="/shop" class="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold text-[#0071E3] hover:text-[#0077ED] transition-colors group">
+                    <span>{{ currentLocale === 'km' ? 'មើលទាំងអស់' : 'View All' }}</span>
+                    <ArrowRight class="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-1" />
+                </Link>
             </div>
 
             <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-6">
@@ -426,7 +440,7 @@ onUnmounted(() => {
                     <div
                         v-for="rev in reviews"
                         :key="rev.id"
-                        class="bg-[#F5F5F7] p-8 rounded-3xl border border-[#E5E5EA] space-y-4 shadow-2xs hover:shadow-sm transition-shadow"
+                        class="bg-[#F5F5F7] p-8 rounded-3xl border border-[#E5E5EA] space-y-4 shadow-2xs d-card-hover"
                     >
                         <div class="flex text-amber-400">
                             <Star v-for="i in rev.rating" :key="i" class="w-4 h-4 fill-current" />
@@ -451,11 +465,32 @@ onUnmounted(() => {
 <style scoped>
 .fade-enter-active,
 .fade-leave-active {
-    transition: opacity 0.8s ease;
+    transition: opacity 800ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .fade-enter-from,
 .fade-leave-to {
     opacity: 0;
+}
+
+.hero-text-enter-active {
+    transition: opacity 350ms cubic-bezier(0.16, 1, 0.3, 1),
+                transform 350ms cubic-bezier(0.16, 1, 0.3, 1),
+                filter 350ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hero-text-leave-active {
+    transition: opacity 180ms cubic-bezier(0.7, 0, 0.84, 0),
+                transform 180ms cubic-bezier(0.7, 0, 0.84, 0),
+                filter 180ms ease;
+}
+.hero-text-enter-from {
+    opacity: 0;
+    transform: translateY(10px);
+    filter: blur(2px);
+}
+.hero-text-leave-to {
+    opacity: 0;
+    transform: translateY(-8px);
+    filter: blur(2px);
 }
 </style>

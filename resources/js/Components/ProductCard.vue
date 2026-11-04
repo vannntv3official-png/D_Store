@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
 import { useTrans } from '@/Composables/useTrans';
-import { ShoppingBag, Star } from 'lucide-vue-next';
+import { ArrowUpRight, Star } from 'lucide-vue-next';
 
 interface ProductCardProps {
     id: number;
     name_en: string;
     name_km: string;
     slug: string;
-    brand?: string | null;
+    brand?: string | { name: string; slug: string } | null;
     base_price: string;
     base_price_khr: number;
     compare_at_price?: string | null;
@@ -40,27 +40,27 @@ const addToCart = (e: Event) => {
 </script>
 
 <template>
-    <div class="group relative flex flex-col bg-white rounded-2xl border border-[#E5E5EA] overflow-hidden transition-[transform,box-shadow] duration-200 ease-out [@media(hover:hover)]:hover:-translate-y-1 [@media(hover:hover)]:hover:shadow-xl active:scale-[0.99] touch-manipulation">
+    <div class="group relative flex flex-col bg-white rounded-2xl border border-[#E5E5EA] overflow-hidden transition-all duration-250 ease-out [@media(hover:hover)]:hover:-translate-y-1.5 [@media(hover:hover)]:hover:shadow-2xl [@media(hover:hover)]:hover:shadow-black/5 [@media(hover:hover)]:hover:border-black/20 active:scale-[0.985] touch-manipulation">
         <!-- Image Container -->
-        <Link :href="`/products/${product.slug}`" class="relative aspect-square w-full overflow-hidden bg-[#F5F5F7] p-3 sm:p-6 flex items-center justify-center">
+        <Link :href="`/products/${product.slug}`" class="relative aspect-square w-full overflow-hidden bg-gradient-to-b from-[#FAFAFC] to-[#F5F5F7] p-3 sm:p-6 flex items-center justify-center">
             <img
                 :src="product.primary_image"
                 :alt="localizedTitle()"
                 loading="lazy"
-                class="h-full w-full object-contain object-center transition-transform duration-500 group-hover:scale-105"
+                class="h-full w-full object-contain object-center transition-transform duration-500 ease-out group-hover:scale-108"
             />
 
             <!-- In stock / Out of stock Pill -->
             <div class="absolute top-2 left-2 sm:top-3 sm:left-3">
                 <span
                     v-if="!product.in_stock"
-                    class="px-2 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider bg-[#FEE2E2] text-[#991B1B] rounded-full"
+                    class="px-2 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider bg-[#FEE2E2] text-[#991B1B] rounded-full shadow-2xs"
                 >
                     {{ t('product.out_of_stock') }}
                 </span>
                 <span
                     v-else-if="product.compare_at_price"
-                    class="px-2 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider bg-[#111111] text-white rounded-full shadow-sm"
+                    class="px-2 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider bg-[#111111] text-white rounded-full shadow-sm d-shimmer"
                 >
                     SALE
                 </span>
@@ -70,7 +70,7 @@ const addToCart = (e: Event) => {
         <!-- Product Information -->
         <div class="flex flex-1 flex-col p-3.5 sm:p-5">
             <div class="text-[10px] sm:text-[11px] font-medium uppercase tracking-wider text-[#86868B] mb-0.5 sm:mb-1 truncate">
-                {{ product.brand || 'D STORE' }}
+                {{ typeof product.brand === 'object' ? product.brand?.name || 'D STORE' : product.brand || 'D STORE' }}
             </div>
 
             <h3 class="text-xs sm:text-sm font-semibold text-[#1D1D1F] line-clamp-2 mb-1.5 sm:mb-2 group-hover:text-[#0071E3] transition-colors leading-snug">
@@ -111,10 +111,11 @@ const addToCart = (e: Event) => {
                 <button
                     type="button"
                     @click="addToCart"
-                    class="p-2 sm:p-2.5 rounded-full bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#111111] hover:text-white active:scale-95 transition-[transform,background-color,color] duration-150 ease-out focus:outline-none cursor-pointer touch-manipulation select-none shrink-0"
-                    :aria-label="t('product.add_to_cart')"
+                    class="p-2 sm:p-2.5 rounded-full bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#111111] hover:text-white active:scale-90 transition-all duration-150 ease-out focus:outline-none cursor-pointer touch-manipulation select-none shrink-0 group/btn shadow-2xs hover:shadow-md"
+                    :aria-label="`${t('product.view_details')}: ${localizedTitle()}`"
+                    :title="t('product.view_details')"
                 >
-                    <ShoppingBag class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <ArrowUpRight class="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform duration-150 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
                 </button>
             </div>
         </div>
