@@ -46,6 +46,21 @@ body {
     min-height: 100dvh;
 }
 
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid #0071E3;
+    outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
 /* Eliminate 300ms tap delay & improve responsiveness on all touch targets */
 button, a, [role="button"], input[type="submit"], input[type="button"], select {
     touch-action: manipulation;
@@ -79,6 +94,13 @@ button, [role="button"], .tab, .chip, .drag-handle {
 :lang(km) .badge, [lang="km"] .badge,
 :lang(km) nav, [lang="km"] nav {
     line-height: normal;
+}
+
+:lang(km) nav a, [lang="km"] nav a,
+:lang(km) nav button, [lang="km"] nav button,
+:lang(km) .whitespace-nowrap, [lang="km"] .whitespace-nowrap {
+    word-break: keep-all;
+    white-space: nowrap !important;
 }
 
 /* Luxury card shadow */

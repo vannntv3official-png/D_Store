@@ -6,7 +6,7 @@ import ProductCard from '@/Components/ProductCard.vue';
 import { useTrans } from '@/Composables/useTrans';
 import { 
     Shield, Sparkles, Truck, Headphones, ArrowRight, Star, 
-    ChevronLeft, ChevronRight, Zap, ArrowUpRight, CheckCircle2
+    ChevronLeft, ChevronRight, Zap, CheckCircle2
 } from 'lucide-vue-next';
 
 interface Props {
@@ -325,80 +325,6 @@ onUnmounted(() => {
                         </p>
                     </div>
                 </div>
-            </div>
-        </section>
-
-        <!-- Curated Secondary Showcase Bento Grid -->
-        <section class="max-w-7xl mx-auto px-4 sm:px-8 py-12">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Bento Card 1: Smartphones & Computing -->
-                <Link
-                    href="/shop?category=smartphones"
-                    class="group relative overflow-hidden rounded-3xl bg-[#111114] text-white p-8 flex flex-col justify-between min-h-[260px] border border-white/10 hover:border-white/25 transition-all shadow-md hover:shadow-xl hover:-translate-y-1"
-                >
-                    <div class="absolute -right-8 -bottom-8 w-44 h-44 rounded-full bg-[#0071E3]/20 blur-2xl group-hover:bg-[#0071E3]/35 transition-all pointer-events-none"></div>
-                    <div class="space-y-3 relative z-10">
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-[10px] font-bold uppercase tracking-wider text-white/80 border border-white/10">
-                            {{ currentLocale === 'km' ? 'ស្មាតហ្វូនជំនាន់ថ្មី' : 'Next-Gen Silicon' }}
-                        </span>
-                        <h3 class="text-xl font-bold tracking-tight text-white group-hover:text-white transition-colors">
-                            {{ currentLocale === 'km' ? 'ស្មាតហ្វូន និងកុំព្យូទ័រ' : 'Smartphones & Workstations' }}
-                        </h3>
-                        <p class="text-xs text-white/65 leading-relaxed">
-                            {{ currentLocale === 'km' ? 'ការធានាផ្លូវការ ១ ឆ្នាំពេញ ពីក្រុមហ៊ុនផលិតផ្ទាល់។' : 'Authorized flagship titanium models with official Cambodian warranty.' }}
-                        </p>
-                    </div>
-                    <div class="pt-6 relative z-10 flex items-center gap-1.5 text-xs font-bold text-white group-hover:text-[#0071E3] transition-colors">
-                        <span>{{ currentLocale === 'km' ? 'ស្វែងរកទំនិញ' : 'Shop Flagships' }}</span>
-                        <ArrowUpRight class="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                    </div>
-                </Link>
-
-                <!-- Bento Card 2: Haute Couture Fashion -->
-                <Link
-                    href="/shop?category=fashion-clothing"
-                    class="group relative overflow-hidden rounded-3xl bg-[#17131F] text-white p-8 flex flex-col justify-between min-h-[260px] border border-white/10 hover:border-white/25 transition-all shadow-md hover:shadow-xl hover:-translate-y-1"
-                >
-                    <div class="absolute -right-8 -bottom-8 w-44 h-44 rounded-full bg-[#A855F7]/20 blur-2xl group-hover:bg-[#A855F7]/35 transition-all pointer-events-none"></div>
-                    <div class="space-y-3 relative z-10">
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-[10px] font-bold uppercase tracking-wider text-white/80 border border-white/10">
-                            {{ currentLocale === 'km' ? 'ម៉ូដសម្លៀកបំពាក់' : 'Haute Couture' }}
-                        </span>
-                        <h3 class="text-xl font-bold tracking-tight text-white group-hover:text-white transition-colors">
-                            {{ currentLocale === 'km' ? 'ម៉ូដសម្លៀកបំពាក់ និងស្បែក' : 'Fine Fashion & Leathercraft' }}
-                        </h3>
-                        <p class="text-xs text-white/65 leading-relaxed">
-                            {{ currentLocale === 'km' ? 'ការជ្រើសរើសយ៉ាងសម្រិតសម្រាំង សាច់ក្រណាត់គុណភាពខ្ពស់។' : 'Curated tailored minimalism, fine silks, and timeless silhouettes.' }}
-                        </p>
-                    </div>
-                    <div class="pt-6 relative z-10 flex items-center gap-1.5 text-xs font-bold text-white group-hover:text-[#A855F7] transition-colors">
-                        <span>{{ currentLocale === 'km' ? 'ស្វែងរកម៉ូដ' : 'Explore Wardrobe' }}</span>
-                        <ArrowUpRight class="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                    </div>
-                </Link>
-
-                <!-- Bento Card 3: Audio & Wearables -->
-                <Link
-                    href="/shop?category=electronics"
-                    class="group relative overflow-hidden rounded-3xl bg-[#0D181A] text-white p-8 flex flex-col justify-between min-h-[260px] border border-white/10 hover:border-white/25 transition-all shadow-md hover:shadow-xl hover:-translate-y-1"
-                >
-                    <div class="absolute -right-8 -bottom-8 w-44 h-44 rounded-full bg-[#10B981]/20 blur-2xl group-hover:bg-[#10B981]/35 transition-all pointer-events-none"></div>
-                    <div class="space-y-3 relative z-10">
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-[10px] font-bold uppercase tracking-wider text-white/80 border border-white/10">
-                            {{ currentLocale === 'km' ? 'ប្រព័ន្ធសំឡេងស្ទូឌីយោ' : 'Spatial Audio' }}
-                        </span>
-                        <h3 class="text-xl font-bold tracking-tight text-white group-hover:text-white transition-colors">
-                            {{ currentLocale === 'km' ? 'ឧបករណ៍បំពងសំឡេង និងនាឡិកា' : 'Acoustics & Smart Wearables' }}
-                        </h3>
-                        <p class="text-xs text-white/65 leading-relaxed">
-                            {{ currentLocale === 'km' ? 'ប្រព័ន្ធកាត់បន្ថយសំឡេងរំខាន និងគុណភាពសំឡេងច្បាស់ល្អ។' : 'Lossless acoustic fidelity, studio monitors, and active sports tracking.' }}
-                        </p>
-                    </div>
-                    <div class="pt-6 relative z-10 flex items-center gap-1.5 text-xs font-bold text-white group-hover:text-[#10B981] transition-colors">
-                        <span>{{ currentLocale === 'km' ? 'ស្វែងរកឧបករណ៍' : 'Discover Audio' }}</span>
-                        <ArrowUpRight class="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                    </div>
-                </Link>
             </div>
         </section>
 
